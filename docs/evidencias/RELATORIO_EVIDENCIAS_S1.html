@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Relatório de Execução e Evidências · Semana 1 · Simulador FCI</title>
+<style>
+  :root {
+    --gold:#B38335; --gold-d:#8f6825; --gold-soft:#f4ecdd;
+    --ink:#272525; --ink-2:#5c5854; --ink-3:#8b8681;
+    --line:#e4ded2; --line-2:#efeae0; --bg:#ffffff; --panel-2:#faf8f3;
+    --ok:#2f6b46; --ok-bg:#e9f1eb; --warn:#8a5e12; --warn-bg:#f6ecd6; --err:#a03d2c; --err-bg:#f5e5e0;
+  }
+  * { box-sizing: border-box; }
+  html,body { margin:0; padding:0; }
+  body { font-family: system-ui, 'DejaVu Sans', Arial, sans-serif; color: var(--ink); font-size: 9.5pt; line-height: 1.45; }
+  .mono { font-family: 'DejaVu Sans Mono', Consolas, monospace; }
+  h1 { font-size: 19pt; margin: 0 0 2mm; letter-spacing: -.3px; }
+  h2 { font-size: 12.5pt; margin: 7mm 0 3mm; color: var(--gold-d); border-bottom: 1.5px solid var(--gold); padding-bottom: 1.2mm; }
+  h3 { font-size: 10.5pt; margin: 5mm 0 2mm; }
+  p { margin: 0 0 2.5mm; }
+  table { border-collapse: collapse; width: 100%; font-size: 8.7pt; }
+  th { background: var(--gold); color: #fff; text-align: left; font-weight: 600; padding: 1.6mm 2.2mm; font-size: 8pt; letter-spacing:.3px; }
+  td { border-bottom: 1px solid var(--line); padding: 1.5mm 2.2mm; vertical-align: top; }
+  tr:nth-child(even) td { background: #fdfbf7; }
+  .quebra { page-break-before: always; }
+  .semquebra { page-break-inside: avoid; }
+  .chip { display:inline-block; font-size: 7.5pt; font-weight: 700; padding: .6mm 2.4mm; border-radius: 8px; letter-spacing:.3px; }
+  .chip-ok { background: var(--ok-bg); color: var(--ok); }
+  .chip-info { background: var(--gold-soft); color: var(--gold-d); }
+  .chip-cinza { background: var(--line-2); color: var(--ink-3); }
+  pre { background: #f6f3ec; border: 1px solid var(--line); border-radius: 2mm; padding: 2.4mm 3mm; font-size: 7.6pt; font-family: 'DejaVu Sans Mono', Consolas, monospace; white-space: pre-wrap; word-break: break-word; margin: 1.5mm 0 3mm; line-height: 1.4; }
+  .nota { font-size: 8pt; color: var(--ink-3); }
+  .capa-meta td:first-child { background: var(--panel-2); font-weight: 700; width: 34mm; color: var(--ink-2); font-size: 8.3pt; }
+  .rf { border: 1px solid var(--line); border-radius: 2.5mm; margin: 0 0 5mm; page-break-inside: avoid; overflow: hidden; }
+  .rf-cabeca { background: var(--ink); color: #f3efe8; padding: 2.2mm 3.5mm; display: flex; align-items: baseline; gap: 3mm; }
+  .rf-cabeca .id { color: var(--gold); font-weight: 800; font-size: 10.5pt; font-family: 'DejaVu Sans Mono', monospace; }
+  .rf-cabeca .titulo { font-weight: 700; font-size: 10pt; flex: 1; }
+  .rf-cabeca .meta { font-size: 7.6pt; color: #c7c1b8; }
+  .rf-corpo { padding: 2.6mm 3.5mm 3mm; }
+  .rf-linha { margin-bottom: 2.2mm; }
+  .rf-rotulo { font-size: 7.6pt; font-weight: 800; letter-spacing: .5px; color: var(--gold-d); margin-bottom: .8mm; }
+  .rf ul, .rf ol { margin: .5mm 0 1.5mm; padding-left: 5mm; }
+  .rf li { margin-bottom: .8mm; }
+  .criterio { background: var(--gold-soft); border-left: 2.5px solid var(--gold); padding: 1.6mm 2.6mm; font-style: italic; font-size: 8.8pt; border-radius: 0 1.5mm 1.5mm 0; }
+  .duas-col { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+  .figura { page-break-inside: avoid; margin: 0 0 6mm; }
+  .figura img { width: 100%; border: 1px solid var(--line); border-radius: 2mm; }
+  .figura .legenda { font-size: 8.2pt; color: var(--ink-2); margin-top: 1.4mm; }
+  .figura .legenda b { color: var(--gold-d); }
+  .ok-badge { color: var(--ok); font-weight: 700; }
+  .capa-topo { border-bottom: 3px solid var(--gold); padding-bottom: 4mm; margin-bottom: 5mm; display: flex; align-items: center; gap: 5mm; }
+  .cubo { width: 16mm; height: 16mm; border-radius: 3mm; background: linear-gradient(145deg,#c9964a,#B38335); color: #272525; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13pt; }
+  a { color: var(--gold-d); text-decoration: none; }
+  .aviso { background: var(--warn-bg); border: 1px solid #e3cfa4; border-radius: 2mm; padding: 2.2mm 3mm; font-size: 8.6pt; color: var(--warn); }
+</style>
+</head>
+<body>
+
+<!-- ============================ CAPA ============================ -->
+<div class="capa-topo">
+  <div class="cubo">CCI</div>
+  <div>
+    <div style="font-size:8pt;letter-spacing:1.5px;color:var(--gold-d);font-weight:700;">PROJETO SIMULADOR FCI · CERVEJARIA CIDADE IMPERIAL · FRUTAL-MG</div>
+    <h1>Relatório de Execução e Evidências — Semana 1</h1>
+    <div style="font-size:10pt;color:var(--ink-2);">Fundação de dados, parâmetros e cenário · requisitos com entrega até 17/09 (+ RF-002 e RF-100, previstos para 18/09, antecipados)</div>
+  </div>
+</div>
+
+<table class="capa-meta semquebra">
+  <tr><td>Documento</td><td>Relatório de execução do cronograma com evidências técnicas e evidências funcionais verificáveis pelo usuário na aplicação</td>
+      <td style="background:var(--panel-2);font-weight:700;width:34mm;color:var(--ink-2);font-size:8.3pt;">Data de emissão</td><td>17/09/2026</td></tr>
+  <tr><td>Período executado</td><td>Semana 1 do cronograma · 14/09/2026 a 18/09/2026 (foco contratado: entregas até 17/09)</td>
+      <td style="background:var(--panel-2);font-weight:700;color:var(--ink-2);font-size:8.3pt;">Classificação</td><td>USO INTERNO</td></tr>
+  <tr><td>Bases de referência</td><td colspan="3">Cronograma de Execução — Projeto Simulador FCI (data-base 10/09/2026, execução 14/09–23/10) · Documento Consolidado de Requisitos Funcionais REV06 (13/08/2026) · ERS v1.0 (30/07/2026, RF-001 a RF-100) · Protótipo web aprovado no discovery (handoff Claude Design)</td></tr>
+  <tr><td>Código-fonte</td><td colspan="3">Repositório <span class="mono">melhorartecnologia-arch/P009FCI</span> · branch <span class="mono">claude/affectionate-hawking-u71hh8</span> · commit <span class="mono">cd4d9c2</span> (17/09/2026 17:10) · 58 arquivos · 13.411 linhas</td></tr>
+  <tr><td>Stack executada</td><td colspan="3">100% Node.js/JavaScript (Express + SPA JS puro, sem build) · PostgreSQL 16 na mesma instância da aplicação (arquitetura VPS AWS Ubuntu) · conectores de integração abstratos (postgres · oracle thin · mssql · mysql · rest · arquivo)</td></tr>
+  <tr><td>Verificação automatizada</td><td colspan="3"><b class="ok-badge">11 de 11 testes de aceite aprovados</b> (<span class="mono">npm test</span> · Node.js 22 · PostgreSQL 16.13) — seção 5</td></tr>
+</table>
+
+<p class="aviso" style="margin-top:4mm;"><b>Natureza das evidências:</b> entrega funcional para validação das áreas responsáveis, conforme o cronograma — não representa homologação fiscal, validação de uso ou aceite definitivo. O simulador é analítico: não gera, não assina e não transmite a FCI oficial e não altera cadastros do Protheus (RN-12 · D-01 · E-14).</p>
+
+<h2>1 · Sumário do cronograma executado</h2>
+<p>A Semana 1 concentra a <b>fundação de dados, parâmetros e cenário</b> — 14 requisitos funcionais da ERS v1.0, materializando os requisitos consolidados RC-001, RC-002, RC-009, RC-015 e RC-016 (gatilho). O quadro abaixo confronta as datas previstas no cronograma com a execução. Todos os itens foram entregues em 17/09/2026, incluindo a antecipação de RF-002 e RF-100 (previstos para 18/09).</p>
+
+<table class="semquebra">
+  <tr><th style="width:14mm;">RF</th><th>Requisito</th><th style="width:22mm;">RC</th><th style="width:24mm;">Área validadora</th><th style="width:20mm;">Entrega prevista</th><th style="width:20mm;">Executado em</th><th style="width:18mm;">Situação</th></tr>
+  <tr><td class="mono"><b>RF-001</b></td><td>Criar cenário</td><td class="mono">RC-001</td><td>Custos</td><td>15/09</td><td>17/09</td><td><span class="chip chip-ok">ENTREGUE</span></td></tr>
+  <tr><td class="mono"><b>RF-090</b></td><td>Configuração da fonte de dados</td><td class="mono">RC-015</td><td>TI</td><td>15/09</td><td>17/09</td><td><span class="chip chip-ok">ENTREGUE</span></td></tr>
+  <tr><td class="mono"><b>RF-091</b></td><td>Mapeamento de dados</td><td class="mono">RC-015</td><td>TI / Processos</td><td>15/09</td><td>17/09</td><td><span class="chip chip-ok">ENTREGUE</span></td></tr>
+  <tr><td class="mono"><b>RF-098</b></td><td>Faixas legais e fatores de cascata</td><td class="mono">RC-015</td><td>Fiscal</td><td>15/09</td><td>17/09</td><td><span class="chip chip-ok">ENTREGUE</span></td></tr>
+  <tr><td class="mono"><b>RF-007</b></td><td>Isolamento do cenário</td><td class="mono">RC-001 · RC-002</td><td>Controladoria</td><td>16/09</td><td>17/09</td><td><span class="chip chip-ok">ENTREGUE</span></td></tr>
+  <tr><td class="mono"><b>RF-092</b></td><td>Teste de conexão</td><td class="mono">RC-015</td><td>TI</td><td>16/09</td><td>17/09</td><td><span class="chip chip-ok">ENTREGUE</span></td></tr>
+  <tr><td class="mono"><b>RF-096</b></td><td>Parâmetros do motor de apuração</td><td class="mono">RC-015</td><td>Fiscal / TI</td><td>16/09</td><td>17/09</td><td><span class="chip chip-ok">ENTREGUE</span></td></tr>
+  <tr><td class="mono"><b>RF-097</b></td><td>Relação de alíquotas de ICMS</td><td class="mono">RC-015</td><td>Fiscal</td><td>16/09</td><td>17/09</td><td><span class="chip chip-ok">ENTREGUE</span></td></tr>
+  <tr><td class="mono"><b>RF-093</b></td><td>Sincronização manual e programada</td><td class="mono">RC-015</td><td>TI</td><td>17/09</td><td>17/09</td><td><span class="chip chip-ok">ENTREGUE</span></td></tr>
+  <tr><td class="mono"><b>RF-094</b></td><td>Status da integração</td><td class="mono">RC-015</td><td>TI</td><td>17/09</td><td>17/09</td><td><span class="chip chip-ok">ENTREGUE</span></td></tr>
+  <tr><td class="mono"><b>RF-095</b></td><td>Falha de integração sem parada</td><td class="mono">RC-015</td><td>TI</td><td>17/09</td><td>17/09</td><td><span class="chip chip-ok">ENTREGUE</span></td></tr>
+  <tr><td class="mono"><b>RF-099</b></td><td>Gatilho de reemissão da FCI</td><td class="mono">RC-015 · RC-016</td><td>Fiscal</td><td>17/09</td><td>17/09</td><td><span class="chip chip-ok">ENTREGUE</span></td></tr>
+  <tr><td class="mono"><b>RF-002</b></td><td>Carregar estrutura de origem do ERP</td><td class="mono">RC-001 · RC-015</td><td>TI / SGI-CGI</td><td>18/09</td><td>17/09</td><td><span class="chip chip-ok">ANTECIPADO</span></td></tr>
+  <tr><td class="mono"><b>RF-100</b></td><td>Restrição de administração</td><td class="mono">RC-009</td><td>TI / Controladoria</td><td>18/09</td><td>17/09</td><td><span class="chip chip-ok">ANTECIPADO</span></td></tr>
+</table>
+
+<h3>Marcos e gates da S1</h3>
+<table class="semquebra">
+  <tr><th style="width:14mm;">ID</th><th style="width:20mm;">Data</th><th>Marco / gate</th><th>Evidência apresentada neste relatório</th><th style="width:26mm;">Situação</th></tr>
+  <tr><td class="mono"><b>M0</b></td><td>14/09</td><td>Kickoff e baseline equalizada</td><td>Baseline de 115 itens adotada como referência única deste relatório e do repositório (README + docs/ESCOPO_S1.md)</td><td><span class="chip chip-ok">CUMPRIDO</span></td></tr>
+  <tr><td class="mono"><b>G1</b></td><td>18/09</td><td>Gate TI / Processos</td><td>Integrações conectadas (5/5 · Fig. 7), mapeamento SB1/SG1/SD1/CFD registrado (Fig. 9) e parâmetros mestres persistidos (Fig. 12) — pronto para validação da área</td><td><span class="chip chip-info">P/ VALIDAÇÃO</span></td></tr>
+  <tr><td class="mono"><b>M1</b></td><td>18/09</td><td>Fundação de dados concluída</td><td>Cenário abre com estrutura integrada, sem digitação manual (Figs. 2, 3 e 4 · seção RF-002)</td><td><span class="chip chip-info">P/ VALIDAÇÃO</span></td></tr>
+</table>
+
+<!-- ============================ COMO VERIFICAR ============================ -->
+<div class="quebra"></div>
+<h2>2 · Como o usuário verifica (roteiro de acesso)</h2>
+<div class="duas-col">
+<div>
+<p><b>Ambiente:</b> aplicação Node.js servida em <span class="mono">http://&lt;servidor&gt;:3000</span> com PostgreSQL local na mesma instância (VPS AWS Ubuntu — instalação por <span class="mono">scripts/install-vps.sh</span>). Em desenvolvimento: <span class="mono">npm run setup &amp;&amp; npm start</span>.</p>
+<p><b>Usuários de verificação</b> (senha inicial <span class="mono">cci@2026</span>, definida em <span class="mono">SEED_SENHA</span>; trocar no 1º acesso):</p>
+<table>
+  <tr><th>E-mail</th><th>Área</th><th>Perfil / uso na verificação</th></tr>
+  <tr><td class="mono">ti@cci.local</td><td>TI</td><td><b>Administrador</b> — edita integrações, parâmetros, usuários</td></tr>
+  <tr><td class="mono">custos@cci.local</td><td>Custos</td><td>Simulador — cria cenários; comprova o modo consulta (RF-100)</td></tr>
+  <tr><td class="mono">controladoria@cci.local</td><td>Controladoria</td><td>Validador — congela cenário (RN-10)</td></tr>
+  <tr><td class="mono">fiscal@cci.local · pricing@cci.local · compras@cci.local</td><td>—</td><td>Perfis de consulta/simulação por área</td></tr>
+</table>
+</div>
+<div>
+<p><b>Roteiro mínimo de verificação (10 min):</b></p>
+<ol style="margin:0;padding-left:5mm;">
+  <li>Entrar como <span class="mono">ti@cci.local</span> → menu <b>Integrações</b>: conferir 5 fontes, testar conexão, sincronizar, abrir Mapeamento e Execuções (RF-090…095).</li>
+  <li>Menu <b>Parâmetros</b>: editar gatilho (5 → 7 p.p.), salvar; incluir/excluir alíquota; alterar um MV_FCI (RF-096…099).</li>
+  <li>Sair e entrar como <span class="mono">custos@cci.local</span> → <b>＋ Novo cenário</b>: cenário nasce v1/Rascunho com estrutura carregada (RF-001/RF-002); abrir a simulação e a aba Estrutura.</li>
+  <li>Voltar a <b>Integrações</b> ainda como Custos: tela em modo consulta com aviso de restrição (RF-100).</li>
+  <li>Menu <b>Alertas</b>: quantidade reflete o gatilho ajustado no passo 2 (RF-099).</li>
+</ol>
+<p class="nota" style="margin-top:2mm;">Reprodução técnica: <span class="mono">npm test</span> executa os 11 testes de aceite da seção 5 contra o banco configurado no <span class="mono">.env</span>.</p>
+</div>
+</div>
+
+<!-- ============================ EVIDÊNCIAS POR REQUISITO ============================ -->
+<h2>3 · Evidências por requisito</h2>
+<p class="nota">Cada bloco traz o critério de aceite do cronograma, a evidência técnica (código, API, banco e teste automatizado) e a evidência funcional — o passo a passo que qualquer usuário reproduz na aplicação, com a figura correspondente do Anexo A.</p>
+
+<!-- RF-001 -->
+<div class="rf">
+  <div class="rf-cabeca"><span class="id">RF-001</span><span class="titulo">Criar cenário</span><span class="meta">RC-001 · Cenários e Governança · previsto 15/09 · validadora: Custos</span></div>
+  <div class="rf-corpo">
+    <div class="rf-linha criterio">“Cenário recebe identificador único, versão 1, status Rascunho, autor e data.”</div>
+    <div class="duas-col">
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA TÉCNICA</div>
+        <ul>
+          <li><span class="mono">POST /api/cenarios</span> → <span class="mono">server/services/cenario.service.js</span> (sequência <span class="mono">cenario_codigo_seq</span>, versão 1, autor da sessão, evento de auditoria em <span class="mono">cenario_eventos</span>).</li>
+          <li>Teste automatizado <b>#8</b> <span class="mono">RF-001/RF-002</span> — <span class="ok-badge">ok</span>: valida código <span class="mono">CEN-NNN</span>, v1, rascunho, autor e data.</li>
+        </ul>
+        <pre>POST /api/cenarios → { "codigo":"CEN-020", "versao":1, "status":"rascunho",
+  "autor":"Ana Ribeiro", "criado_em":"2026-09-17T17:14:59Z", … }</pre>
+      </div>
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA FUNCIONAL (VERIFICÁVEL PELO USUÁRIO)</div>
+        <ol>
+          <li>Entrar como <span class="mono">custos@cci.local</span> → tela <b>Cenários</b> → botão <b>＋ Novo cenário</b>.</li>
+          <li>Informar nome/tipo/ciclo e confirmar (<b>Fig. 3</b>).</li>
+          <li>Resultado: card do cenário com código único (ex.: CEN-001), <b>v1</b>, chip <b>Rascunho</b>, autor e “Atualizado em” (<b>Fig. 2</b>).</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RF-090 -->
+<div class="rf">
+  <div class="rf-cabeca"><span class="id">RF-090</span><span class="titulo">Configuração da fonte de dados</span><span class="meta">RC-015 · Dados e Integrações · previsto 15/09 · validadora: TI</span></div>
+  <div class="rf-corpo">
+    <div class="rf-linha criterio">“Host/endpoint, porta, base, usuário e credencial editáveis; credencial nunca em texto claro.”</div>
+    <div class="duas-col">
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA TÉCNICA</div>
+        <ul>
+          <li>CRUD <span class="mono">/api/fontes</span> com conector abstrato (postgres · oracle thin · mssql · mysql · rest · arquivo) — <span class="mono">server/routes/fontes.routes.js</span>, <span class="mono">server/connectors/*</span>.</li>
+          <li>Credencial cifrada <b>AES-256-GCM</b> (<span class="mono">server/crypto.js</span>); API devolve somente máscara. Teste <b>#2</b> — <span class="ok-badge">ok</span>.</li>
+        </ul>
+        <pre>Em repouso (fci.fontes_dados.credencial_enc):
+  v1.enxo0tXI/GhcQ2PJ.u4h5EtWeSuxyjnwFe3Pe+Q==…
+Na API: { "possuiCredencial": true, "credencialMascarada": "••••••••" }</pre>
+      </div>
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA FUNCIONAL</div>
+        <ol>
+          <li>Como TI → <b>Integrações</b>: 5 fontes com host, porta, base, usuário e credencial (<b>Fig. 7</b>).</li>
+          <li><b>Editar conexão…</b> abre o formulário completo; campo credencial exibe apenas “••••••••  (armazenada cifrada)”.</li>
+          <li><b>＋ Nova fonte de dados</b> permite cadastrar origem nova escolhendo o conector (SGBD) — sem alteração de código.</li>
+          <li>Na Fig. 11, a fonte de teste mostra a credencial sempre mascarada, inclusive em estado de erro.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RF-091 -->
+<div class="rf">
+  <div class="rf-cabeca"><span class="id">RF-091</span><span class="titulo">Mapeamento de dados</span><span class="meta">RC-015 · Dados e Integrações · previsto 15/09 · validadora: TI / Processos · dep. RF-090</span></div>
+  <div class="rf-corpo">
+    <div class="rf-linha criterio">“Cada variável do simulador aponta tabela e campo de origem (SB1.B1_COD, B1_DESC, B1_ORIGEM, SD1.D1_CLASFIS).”</div>
+    <div class="duas-col">
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA TÉCNICA</div>
+        <ul>
+          <li>Catálogo de variáveis (<span class="mono">server/services/catalogo.js</span>) + tabela <span class="mono">fci.mapeamentos</span> (variável → tabela · campo) · <span class="mono">PUT /api/fontes/:id/mapeamentos</span>.</li>
+          <li>Seed registra o mapeamento do ERP: <span class="mono">produto.codigo→SB1.B1_COD</span>, <span class="mono">produto.descricao→B1_DESC</span>, <span class="mono">produto.origem→B1_ORIGEM</span>, <span class="mono">cst.cst→SD1.D1_CLASFIS</span>, estrutura <span class="mono">SG1</span> e FCI vigente <span class="mono">CFD</span>.</li>
+          <li>Teste <b>#6</b> (variável fora do catálogo → HTTP 422) — <span class="ok-badge">ok</span>.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA FUNCIONAL</div>
+        <ol>
+          <li>Como TI → <b>Integrações</b> → card “ERP Protheus (TOTVS)”: bloco “MAPEAMENTO · VARIÁVEL → TABELA · CAMPO” visível no próprio card (<b>Fig. 7</b>).</li>
+          <li>Botão <b>Mapeamento…</b> abre o editor: cada variável do simulador com tabela/campo editáveis, incluir e excluir linhas (<b>Fig. 9</b>).</li>
+          <li>Salvar e sincronizar aplica a carga conforme o mapeamento.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RF-098 -->
+<div class="rf">
+  <div class="rf-cabeca"><span class="id">RF-098</span><span class="titulo">Faixas legais e fatores de cascata</span><span class="meta">RC-015 · Dados e Integrações · previsto 15/09 · validadora: Fiscal</span></div>
+  <div class="rf-corpo">
+    <div class="rf-linha criterio">“Três faixas exibidas com limite, fator (0 / 0,5 / 1) e alíquota associada.”</div>
+    <div class="duas-col">
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA TÉCNICA</div>
+        <ul>
+          <li>Parâmetro <span class="mono">faixas</span> persistido em <span class="mono">fci.parametros</span>; validação do servidor exige exatamente 3 faixas com fatores legais 0/0,5/1 (RN-05) — <span class="mono">server/routes/parametros.routes.js</span>.</li>
+          <li>Fatores aplicados na cascata do motor (<span class="mono">public/js/engine.js</span>), visíveis por componente na coluna “CI NÓ ×fator” (Fig. 4).</li>
+        </ul>
+      </div>
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA FUNCIONAL</div>
+        <ol>
+          <li>Menu <b>Parâmetros</b>: os três cartões de faixa — CI% ≤ 40% (fator ×0 · ICMS 7%/12%), 40–70% (×0,5 · 4%), &gt; 70% (×1 · 4%) — com limite, classe e alíquota (<b>Fig. 12</b>).</li>
+          <li>Na simulação, cada componente exibe o fator aplicado (ex.: Lata 473ml “50% ×0,50” — <b>Fig. 4</b>).</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RF-007 -->
+<div class="rf">
+  <div class="rf-cabeca"><span class="id">RF-007</span><span class="titulo">Isolamento do cenário</span><span class="meta">RC-001 · RC-002 · previsto 16/09 · validadora: Controladoria · dep. RF-001</span></div>
+  <div class="rf-corpo">
+    <div class="rf-linha criterio">“Alteração em um cenário não altera outros cenários nem o cadastro oficial de origem.”</div>
+    <div class="duas-col">
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA TÉCNICA</div>
+        <ul>
+          <li>Cada cenário guarda snapshot próprio em JSONB (<span class="mono">fci.cenarios.dados</span>); <span class="mono">PUT /api/cenarios/:id/dados</span> altera só a linha do cenário; conectores executam apenas SELECT (RNF-06).</li>
+          <li>Teste <b>#9</b> — <span class="ok-badge">ok</span>: altera câmbio USD→9,99 no cenário A e comprova B inalterado; edição registrada em <span class="mono">cenario_eventos</span>.</li>
+          <li>Teste <b>#10</b> (RN-10) — <span class="ok-badge">ok</span>: congelado → edição retorna HTTP 409; duplicação gera v+1.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA FUNCIONAL</div>
+        <ol>
+          <li>Criar dois cenários; no primeiro, aba <b>Parametrização</b>, alterar a cotação USD e <b>Salvar alterações</b>.</li>
+          <li>Abrir o segundo cenário: cotação original preservada; tela exibe “Alterações valem apenas neste cenário…” (<b>Fig. 4</b>, rodapé).</li>
+          <li>Como Controladoria, <b>🔒 Congelar premissas</b>: campos travados e banner com ação “Nova versão”.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RF-092 -->
+<div class="rf">
+  <div class="rf-cabeca"><span class="id">RF-092</span><span class="titulo">Teste de conexão</span><span class="meta">RC-015 · previsto 16/09 · validadora: TI · dep. RF-090</span></div>
+  <div class="rf-corpo">
+    <div class="rf-linha criterio">“Teste acionável altera o status apresentado e registra o momento da verificação.”</div>
+    <div class="duas-col">
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA TÉCNICA</div>
+        <ul>
+          <li><span class="mono">POST /api/fontes/:id/testar</span> → conector real abre conexão e grava <span class="mono">status</span>, <span class="mono">testado_em</span>, <span class="mono">teste_msg</span>. Teste <b>#4</b> — <span class="ok-badge">ok</span>.</li>
+        </ul>
+        <pre>{ "ok":true, "mensagem":"Conexão estabelecida · PostgreSQL 16.13 (Ubuntu…)",
+  "status":"conectado", "testadoEm":"2026-09-17T17:14:46Z" }</pre>
+      </div>
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA FUNCIONAL</div>
+        <ol>
+          <li>Como TI → <b>Integrações</b> → <b>Testar conexão</b> em qualquer fonte.</li>
+          <li>Resultado: notificação com a versão do SGBD (<b>Fig. 8</b>) e, no rodapé do card, “Teste: <i>data/hora</i>” registrado + chip de status atualizado.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RF-096 -->
+<div class="rf">
+  <div class="rf-cabeca"><span class="id">RF-096</span><span class="titulo">Parâmetros do motor de apuração</span><span class="meta">RC-015 · previsto 16/09 · validadora: Fiscal / TI · dep. RF-090</span></div>
+  <div class="rf-corpo">
+    <div class="rf-linha criterio">“Parâmetros MV_FCI, CFOP de saída interestadual/interna/transferência e NF de complemento editáveis e persistidos.”</div>
+    <div class="duas-col">
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA TÉCNICA</div>
+        <ul>
+          <li>Parâmetro <span class="mono">motor</span> com MV_FCICL, MV_FCIVE, MV_FCIVI, MV_FCITR, MV_FCICOMP e MV_FCINTHD espelhados do Protheus (Frutal — Grupo 30), persistidos via <span class="mono">PUT /api/parametros/motor</span> com histórico em <span class="mono">parametros_hist</span>. Teste <b>#11</b> — <span class="ok-badge">ok</span>.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA FUNCIONAL</div>
+        <ol>
+          <li>Como TI → <b>Parâmetros</b> → bloco “Parâmetros do motor · MV_FCI”: listas de CFOP e demais valores editáveis (<b>Fig. 12</b>).</li>
+          <li>Alterar um valor → <b>Salvar parâmetros MV_FCI</b> → reabrir a tela: valor persistido e registro no “Histórico de alterações”.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RF-097 -->
+<div class="rf">
+  <div class="rf-cabeca"><span class="id">RF-097</span><span class="titulo">Relação de alíquotas de ICMS</span><span class="meta">RC-015 · previsto 16/09 · validadora: Fiscal · dep. RF-096</span></div>
+  <div class="rf-corpo">
+    <div class="rf-linha criterio">“Inclusão, alteração e exclusão de alíquotas da relação aceita pelo motor.”</div>
+    <div class="duas-col">
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA TÉCNICA</div>
+        <ul>
+          <li>Parâmetro <span class="mono">aliquotas</span> (MV_FCIALIQ = 4, 6, 7, 11, 12, 18, 23, 25) com validação 0–100%. Teste <b>#11</b> — <span class="ok-badge">ok</span>; histórico registra 3 alterações no período de verificação.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA FUNCIONAL</div>
+        <ol>
+          <li><b>Parâmetros</b> → “MV_FCIALIQ”: chips de alíquota com edição direta, “×” para excluir e “＋” para incluir (<b>Fig. 12</b>).</li>
+          <li><b>Salvar alíquotas</b> persiste a relação; recarregar a tela comprova.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RF-093 -->
+<div class="rf">
+  <div class="rf-cabeca"><span class="id">RF-093</span><span class="titulo">Sincronização manual e programada</span><span class="meta">RC-015 · previsto 17/09 · validadora: TI · dep. RF-092</span></div>
+  <div class="rf-corpo">
+    <div class="rf-linha criterio">“Sincronização manual acionável e frequência programada visível por integração.”</div>
+    <div class="duas-col">
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA TÉCNICA</div>
+        <ul>
+          <li><span class="mono">POST /api/fontes/:id/sincronizar</span> + agendador node-cron por fonte (manual · 15min · horária · diária com horário) — <span class="mono">server/services/sync.service.js</span>. Execuções auditadas em <span class="mono">sync_execucoes</span>. Teste <b>#5</b> — <span class="ok-badge">ok</span>.</li>
+        </ul>
+        <pre>fci.fontes_dados → protheus: conectado · última sync 17/09/2026 17:14 · diária 06:00
+precos: horária · portal_custos/cambio/compras: diária</pre>
+      </div>
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA FUNCIONAL</div>
+        <ol>
+          <li>Como TI → <b>Integrações</b> → <b>Sincronizar agora</b>: chip muda para “Sincronizando…” e conclui com notificação de registros carregados.</li>
+          <li>Rodapé de cada card exibe a frequência programada (“Diária · 06:00”, “Horária”) — <b>Fig. 7</b>.</li>
+          <li>Botão <b>Execuções</b> abre o histórico de cargas com disparo manual/agendada, usuário e registros (<b>Fig. 10</b>).</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RF-094 -->
+<div class="rf">
+  <div class="rf-cabeca"><span class="id">RF-094</span><span class="titulo">Status da integração</span><span class="meta">RC-015 · previsto 17/09 · validadora: TI · dep. RF-092</span></div>
+  <div class="rf-corpo">
+    <div class="rf-linha criterio">“Estados conectado, sincronizando e erro distinguíveis, com data e hora da última sincronização.”</div>
+    <div class="duas-col">
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA TÉCNICA</div>
+        <ul>
+          <li>Campo <span class="mono">status</span> (nao_configurado · conectado · sincronizando · erro) atualizado em cada teste/sincronização, com <span class="mono">last_sync_at</span>. Testes <b>#4/#5/#7</b> — <span class="ok-badge">ok</span>.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA FUNCIONAL</div>
+        <ol>
+          <li><b>Integrações</b>: chips verdes “Conectado” (Fig. 7), âmbar pulsante “Sincronizando…” durante a carga e vermelho “Erro” (Fig. 11).</li>
+          <li>Cada card mostra “Última sync: <i>data/hora</i>” no rodapé.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RF-095 -->
+<div class="rf">
+  <div class="rf-cabeca"><span class="id">RF-095</span><span class="titulo">Falha de integração sem parada</span><span class="meta">RC-015 · previsto 17/09 · validadora: TI · dep. RF-094</span></div>
+  <div class="rf-corpo">
+    <div class="rf-linha criterio">“Integração em erro é destacada e o cenário permanece operável sobre os dados já carregados.”</div>
+    <div class="duas-col">
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA TÉCNICA</div>
+        <ul>
+          <li>A sincronização busca todos os dados <b>antes</b> de gravar e aplica snapshot em transação única: falha → ROLLBACK → última carga válida preservada (RNF-07) — <span class="mono">sync.service.js</span>.</li>
+          <li>Teste <b>#7</b> — <span class="ok-badge">ok</span>: fonte com host inacessível → HTTP 502, status “erro”, staging das demais fontes íntegro e criação de cenário funcionando em seguida.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA FUNCIONAL</div>
+        <ol>
+          <li><b>Fig. 11</b>: fonte “Origem de teste — indisponível” com chip <b>Erro</b> e a falha destacada (“connect ECONNREFUSED…”), com a mensagem “A última carga válida permanece no staging e os cenários seguem operáveis”.</li>
+          <li>Nas demais fontes o badge “📦 N registro(s) no staging” comprova os dados disponíveis; criar um cenário nesse estado funciona normalmente.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RF-099 -->
+<div class="rf">
+  <div class="rf-cabeca"><span class="id">RF-099</span><span class="titulo">Gatilho de reemissão da FCI</span><span class="meta">RC-015 · RC-016 · previsto 17/09 · validadora: Fiscal · dep. RF-096</span></div>
+  <div class="rf-corpo">
+    <div class="rf-linha criterio">“Gatilho parametrizável em pontos percentuais (padrão 5 p.p.); alteração reflete nos alertas.”</div>
+    <div class="duas-col">
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA TÉCNICA</div>
+        <ul>
+          <li>Parâmetro <span class="mono">gatilho_reemissao</span> (padrão 5 p.p., validação 0–100) com histórico — 6 alterações registradas na verificação. Teste <b>#11</b> — <span class="ok-badge">ok</span> (inclui rejeição de valor inválido, HTTP 422).</li>
+          <li>Alertas de reemissão calculados com o gatilho vigente (RN-08) — <span class="mono">engine.js · alertasCenario()</span>.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA FUNCIONAL</div>
+        <ol>
+          <li><b>Parâmetros</b> → “Gatilho de reemissão da FCI”: campo em p.p. com <b>Salvar</b> (<b>Fig. 12</b>).</li>
+          <li><b>Alertas</b>: cada alerta de reemissão cita a variação vs FCI vigente e o gatilho aplicado (<b>Fig. 13</b>); alterar o gatilho e voltar muda a quantidade de alertas e o contador do sino.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RF-002 -->
+<div class="rf">
+  <div class="rf-cabeca"><span class="id">RF-002</span><span class="titulo">Carregar estrutura de origem do ERP</span><span class="meta">RC-001 · RC-015 · previsto 18/09 (antecipado) · validadora: TI / SGI-CGI · dep. RF-091</span></div>
+  <div class="rf-corpo">
+    <div class="rf-linha criterio">“Ao abrir o cenário, lista técnica e cadastro de insumos refletem a origem integrada, sem digitação manual.”</div>
+    <div class="duas-col">
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA TÉCNICA</div>
+        <ul>
+          <li><span class="mono">estrutura.service.js · montarDadosDeOrigem()</span>: staging → 7 produtos (2 PI + 5 PA), 22 insumos, estrutura SG1 em cascata, CST da SD1, custos, saídas por UF, câmbio e FCI vigente (CFD). Regra de origem E-04 aplicada (<span class="mono">catalogo.js</span>) como padrão provisório até o gate G2.</li>
+          <li>Staging carregado: produto 29 · estrutura 34 · cst 22 · custo 22 · saida_uf 15 · cambio 4 · fornecedor 11 registros. Teste <b>#8</b> — <span class="ok-badge">ok</span> (inclui origem 1→importado 100% e origem 3→CI 50%).</li>
+        </ul>
+        <pre>CEN-020 · origem_dados: "ERP Protheus (TOTVS) · Portal de Custos · Sistema de
+Preços (Pricing) · Câmbio · Financeiro · Compras / Contratos"
+produtos: 7 · insumos: 22 · fornecedores: 11 · câmbio USD/EUR/GBP/CHF
+estrutura PA-9002: PI-7001×0,473 · MP-3002×1 · MP-3003×1 · MP-4001×1 · MP-5001×0,006</pre>
+      </div>
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA FUNCIONAL</div>
+        <ol>
+          <li>Criar um cenário (<b>Fig. 3</b>) — nenhuma digitação de produto/insumo é solicitada.</li>
+          <li>Abrir a simulação → aba <b>Estrutura</b>: cascata MP → PI → PA completa, com origem/classificação, fornecedor, custo FCI e o selo “⬇ Origem: ERP Protheus (TOTVS) · Portal de Custos · …” (<b>Fig. 4</b>).</li>
+          <li>Aba <b>Parametrização</b>: câmbio e volumes/preços por UF carregados da integração (<b>Fig. 6</b>).</li>
+          <li>Botão <b>⬇ Recarregar estrutura do ERP</b> refaz a carga do staging a qualquer momento.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RF-100 -->
+<div class="rf">
+  <div class="rf-cabeca"><span class="id">RF-100</span><span class="titulo">Restrição de administração</span><span class="meta">RC-009 · previsto 18/09 (antecipado) · validadora: TI / Controladoria · dep. RF-090</span></div>
+  <div class="rf-corpo">
+    <div class="rf-linha criterio">“Perfis não administradores acessam integrações e parâmetros em modo consulta, com indicação da restrição.”</div>
+    <div class="duas-col">
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA TÉCNICA</div>
+        <ul>
+          <li>Matriz de permissões por área (<span class="mono">server/permissions.js</span>) + middleware <span class="mono">exigirAcao</span>; escrita fora do perfil TI → HTTP 403 com a justificativa. Teste <b>#3</b> — <span class="ok-badge">ok</span>.</li>
+        </ul>
+        <pre>POST /api/fontes/1/testar (perfil Custos) → HTTP 403
+{ "erro":"Ação restrita. Seu perfil (Simulador · Custos) tem acesso de consulta;
+  a edição de integrações e fontes de dados é do perfil Administrador (TI)." }</pre>
+      </div>
+      <div>
+        <div class="rf-rotulo">EVIDÊNCIA FUNCIONAL</div>
+        <ol>
+          <li>Entrar como <span class="mono">custos@cci.local</span> → <b>Integrações</b>: banner “🔒 Edição de conexões restrita ao perfil Administrador (TI). Visualização liberada para consulta”, botões desabilitados e apenas “Ver mapeamento” (<b>Fig. 14</b>).</li>
+          <li><b>Parâmetros</b>: mesmo comportamento (campos desabilitados, sem botões de salvar).</li>
+          <li>Menu <b>Usuários</b> visível apenas para o Administrador.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ TESTES ============================ -->
+<div class="quebra"></div>
+<h2>4 · Verificação automatizada — testes de aceite</h2>
+<p>Suite <span class="mono">test/smoke.test.js</span> executada com <span class="mono">npm test</span> (Node.js 22 · PostgreSQL 16.13) contra a API real e o banco — resultado integral em 17/09/2026:</p>
+<pre>ok 1  - login inválido é recusado
+ok 2  - RF-090/RNF-05 · fontes listadas sem credencial em texto claro
+ok 3  - RF-100 · perfil não administrador tem apenas consulta em integrações/parâmetros
+ok 4  - RF-092 · teste de conexão altera status e registra o momento
+ok 5  - RF-093/094 · sincronização manual carrega staging e registra execução
+ok 6  - RF-091 · mapeamento rejeita variável fora do catálogo
+ok 7  - RF-095 · falha de integração não derruba a operação nem apaga a última carga
+ok 8  - RF-001/RF-002 · cenário nasce com id único, v1, rascunho, autor e estrutura integrada
+ok 9  - RF-007 · isolamento: editar um cenário não altera outro
+ok 10 - RN-10 · cenário congelado bloqueia edição e exige nova versão
+ok 11 - RF-096/097/099 · parâmetros editáveis, persistidos e com histórico
+# tests 11 · pass 11 · fail 0</pre>
+
+<h2>5 · Regras de negócio e requisitos não funcionais atendidos na S1</h2>
+<table class="semquebra">
+  <tr><th style="width:18mm;">ID</th><th>Exigência</th><th>Evidência</th></tr>
+  <tr><td class="mono"><b>RNF-03</b></td><td>Interface e mensagens em português do Brasil, terminologia fiscal/industrial</td><td>Todas as telas, mensagens de erro da API e notificações (Figs. 1–14)</td></tr>
+  <tr><td class="mono"><b>RNF-05</b></td><td>Credenciais nunca em texto claro; edição restrita ao administrador</td><td>AES-256-GCM em repouso + máscara na API (seção RF-090) · RBAC (seção RF-100) · teste #2</td></tr>
+  <tr><td class="mono"><b>RNF-06</b></td><td>Nenhuma operação altera os sistemas de origem</td><td>Conectores executam somente SELECT/GET; cenários gravam apenas no snapshot próprio (teste #9)</td></tr>
+  <tr><td class="mono"><b>RNF-07</b></td><td>Falha de integração não impede operação sobre dados carregados</td><td>Seção RF-095 · Fig. 11 · teste #7</td></tr>
+  <tr><td class="mono"><b>RNF-04</b></td><td>Rastreabilidade (base S1)</td><td><span class="mono">cenario_eventos</span> (criação/edição/duplicação/status), <span class="mono">parametros_hist</span>, <span class="mono">sync_execucoes</span> (Fig. 10)</td></tr>
+  <tr><td class="mono"><b>RN-12</b></td><td>Simulador não transmite à SEFAZ nem substitui a FCI oficial</td><td>Avisos permanentes no login (Fig. 1), no dashboard (Fig. 2) e nos alertas (Fig. 13)</td></tr>
+  <tr><td class="mono"><b>E-04</b></td><td>Regra de origem × conteúdo importado (padrão provisório até G2 · 25/09)</td><td>0→0% · 1 e 2→100% · 3→50% · 4–7→0% · 8→100% em <span class="mono">catalogo.js</span>; comprovada no teste #8 e na Fig. 4</td></tr>
+  <tr><td class="mono"><b>E-06</b></td><td>Quatro moedas parametrizáveis</td><td>USD · EUR · GBP · CHF no parâmetro <span class="mono">moedas</span> e no câmbio do cenário (Figs. 6 e 12)</td></tr>
+  <tr><td class="mono"><b>E-07</b></td><td>FOB, frete e seguro manuais no cenário</td><td>Campos próprios no modelo do insumo; carga aceita valores segregados apenas se a origem fornecer (variáveis opcionais <span class="mono">custo.fob…</span>)</td></tr>
+</table>
+
+<h3>Prévias entregues além do escopo S1 (sem compromisso de aceite nesta semana)</h3>
+<ul>
+  <li><b>Motor de cálculo do CI%</b> portado do protótipo — cascata MP→PI→PA, fatores de faixa e denominador pela média ponderada das saídas (RN-01/02/03/05) alimentando as abas Estrutura e Cálculo (Figs. 4 e 5) — antecipação técnica das semanas S2/S3.</li>
+  <li><b>Duplicar como nova versão</b> (RF-003 · S2) e congelamento com nova versão (RN-10 · S5) já operacionais.</li>
+  <li><b>Prévia de alertas</b> (faixa, reemissão, risco &gt; 40%) usando o gatilho da S1 (Fig. 13) — entrega plena na S6.</li>
+  <li>Aviso de CST divergente (E-05/RF-033 · S2) na aba Validação.</li>
+</ul>
+
+<h2>6 · Validação pelas áreas (gate G1 · 18/09)</h2>
+<p class="nota">Campos para registro da validação funcional prevista no cronograma (as datas são de entrega funcional; não representam homologação fiscal).</p>
+<table class="semquebra">
+  <tr><th style="width:40mm;">Área</th><th style="width:44mm;">Responsável</th><th style="width:22mm;">Data</th><th>Observações</th></tr>
+  <tr><td>TI / Processos (gate G1)</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+  <tr><td>Custos</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+  <tr><td>Fiscal</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+  <tr><td>Controladoria</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+</table>
+
+<!-- ============================ ANEXO A ============================ -->
+<div class="quebra"></div>
+<h2>Anexo A · Evidências funcionais — telas da aplicação (17/09/2026)</h2>
+<p class="nota">Capturas reais da aplicação em execução (resolução 1440×940, perfil indicado em cada figura). Reproduzíveis pelo roteiro da seção 2.</p>
+
+<div class="figura"><img src="figuras/fig-01.png"><div class="legenda"><b>Figura 1</b> — Acesso com autenticação por perfil de área e aviso permanente de uso gerencial sem validade fiscal (RN-12 · RNF-03). Referências: RF-100.</div></div>
+<div class="figura"><img src="figuras/fig-02.png"><div class="legenda"><b>Figura 2</b> — Painel de cenários: KPIs, cenário CEN-001 v1 Rascunho com autor/data, distribuição por faixa e selo “Carga integrada” com as fontes de origem. Referências: RF-001 · RF-002 · RF-007 · RF-099 (contador de alertas com o gatilho vigente).</div></div>
+<div class="figura"><img src="figuras/fig-03.png"><div class="legenda"><b>Figura 3</b> — Modal “Novo cenário”: identificador único, versão 1 e status Rascunho automáticos; estrutura carregada das fontes integradas, sem digitação manual. Referências: RF-001 · RF-002 · RF-007.</div></div>
+<div class="figura"><img src="figuras/fig-04.png"><div class="legenda"><b>Figura 4</b> — Simulação · aba Estrutura: cascata MP → PI → PA da Cerveja IPA 473ml carregada do ERP (selo de origem), com classificação por origem (E-04), fornecedor, custo FCI unitário, CI do nó × fator de faixa e parcela importada; CI% do produto na base “média ponderada das saídas interestaduais”. Referências: RF-002 · RF-098 · prévia S2/S3.</div></div>
+<div class="figura"><img src="figuras/fig-05.png"><div class="legenda"><b>Figura 5</b> — Simulação · aba Cálculo: memória de cálculo demonstrável (custo total, parcela importada, denominador, CI%, base alternativa, FCI vigente e variação vs gatilho) com a versão da fórmula. Referências: RNF-08 · RF-099 · prévia S3 (RN-01/02/03).</div></div>
+<div class="figura"><img src="figuras/fig-06.png"><div class="legenda"><b>Figura 6</b> — Simulação · aba Parametrização: câmbio do cenário por moeda (USD/EUR/GBP/CHF · E-06) e volumes/preços por UF carregados do Sistema de Preços com peso por destino. Referências: RF-002 · RF-007 · prévia S2/S3.</div></div>
+<div class="figura"><img src="figuras/fig-07.png"><div class="legenda"><b>Figura 7</b> — Integrações (perfil TI): 5 fontes conectadas, dados de conexão editáveis com credencial mascarada, mapeamento variável → tabela · campo visível, staging por fonte, frequência de sincronização e última sync. Referências: RF-090 · RF-091 · RF-093 · RF-094.</div></div>
+<div class="figura"><img src="figuras/fig-08.png"><div class="legenda"><b>Figura 8</b> — Teste de conexão acionável com retorno da versão do SGBD e registro do momento da verificação no card. Referência: RF-092.</div></div>
+<div class="figura"><img src="figuras/fig-09.png"><div class="legenda"><b>Figura 9</b> — Editor de mapeamento de dados: cada variável do simulador aponta tabela e campo da origem (SB1.B1_COD, B1_DESC, B1_ORIGEM, SD1.D1_CLASFIS…), com inclusão/exclusão de variáveis. Referência: RF-091.</div></div>
+<div class="figura"><img src="figuras/fig-10.png"><div class="legenda"><b>Figura 10</b> — Histórico de execuções de sincronização: disparo manual/agendada, usuário, status, registros e detalhe por entidade. Referências: RF-093 · RF-094 · RNF-04.</div></div>
+<div class="figura"><img src="figuras/fig-11.png"><div class="legenda"><b>Figura 11</b> — Falha sem parada: fonte com host inacessível destacada em “Erro” com a causa registrada, credencial permanece mascarada, e as demais fontes seguem conectadas com a última carga válida no staging — cenários continuam operáveis. Referências: RF-094 · RF-095 · RNF-05/07.</div></div>
+<div class="figura"><img src="figuras/fig-12.png"><div class="legenda"><b>Figura 12</b> — Parâmetros mestres (perfil TI): três faixas legais com limite, fator ×0/×0,5/×1 e alíquota associada; relação MV_FCIALIQ editável; gatilho de reemissão em p.p.; parâmetros MV_FCI/CFOPs persistidos. Referências: RF-096 · RF-097 · RF-098 · RF-099.</div></div>
+<div class="figura"><img src="figuras/fig-13.png"><div class="legenda"><b>Figura 13</b> — Alertas com o gatilho parametrizado aplicado (variação vs FCI vigente em p.p., mudança de faixa e risco &gt; 40%), com área responsável e ressalva de uso gerencial. Referências: RF-099 · prévia S6 (RF-083…086).</div></div>
+<div class="figura"><img src="figuras/fig-14.png"><div class="legenda"><b>Figura 14</b> — Perfil não administrador (Custos · Simulador) em Integrações: aviso “🔒 Edição restrita ao perfil Administrador (TI) — visualização liberada para consulta”, ações desabilitadas e menu Usuários ausente. Referência: RF-100 · RNF-09.</div></div>
+
+</body>
+</html>
