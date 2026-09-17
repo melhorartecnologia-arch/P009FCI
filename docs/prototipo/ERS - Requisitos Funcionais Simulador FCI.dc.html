@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+doc-page:not(:defined){visibility:hidden}
+body{font-family:'IBM Plex Sans',system-ui,sans-serif;color:#272525;-webkit-font-smoothing:antialiased;}
+a{color:#8f6825;text-decoration:none;} a:hover{color:#B38335;}
+.kept{break-inside:avoid;orphans:3;widows:3;}
+table{width:100%;border-collapse:collapse;}
+tr{break-inside:avoid;}
+th{text-align:left;font-size:7.5pt;letter-spacing:.4px;color:#5c5854;font-weight:700;padding:6px 8px;border:1px solid #e4ded2;background:#faf8f3;}
+td{font-size:9pt;line-height:1.45;padding:6px 8px;border:1px solid #e4ded2;vertical-align:top;}
+td.id{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:8.5pt;color:#8f6825;white-space:nowrap;}
+td.nome{font-weight:600;font-size:9pt;}
+h2{font-size:13.5pt;font-weight:700;margin:22px 0 9px;padding-bottom:5px;border-bottom:2px solid #B38335;break-after:avoid;}
+h3{font-size:11pt;font-weight:600;margin:16px 0 7px;break-after:avoid;}
+p{font-size:10pt;line-height:1.6;margin:0 0 8px;}
+ul{font-size:10pt;line-height:1.6;margin:0 0 10px;padding-left:19px;}
+.ac{color:#5c5854;}
+</style>
+<script src="./doc-page.js"></script>
+</helmet>
+<doc-page margin="0.68in">
+
+  <div slot="header" style="display:flex;align-items:center;gap:9px;padding-bottom:7px;border-bottom:1px solid #e4ded2;font-size:8.5pt;color:#8b8681;">
+    <span style="display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:4px;background:#B38335;color:#272525;font-weight:700;font-size:7pt;letter-spacing:-.3px;">CCI</span>
+    <span style="font-weight:600;color:#5c5854;">ERS — Simulador de FCI</span>
+    <span>·</span>
+    <span>Especificação de Requisitos Funcionais</span>
+    <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;">v1.0 · 30/07/2026</span>
+  </div>
+
+  <div slot="footer" style="display:flex;align-items:center;gap:8px;padding-top:7px;border-top:1px solid #e4ded2;font-size:8pt;color:#8b8681;">
+    <span>Cervejaria Cidade Imperial · Frutal-MG · Grupo Petrópolis</span>
+    <span style="margin-left:auto;">Documento para aprovação da área requerente · Confidencial</span>
+  </div>
+
+  <div style="font-size:8pt;font-weight:700;letter-spacing:.8px;color:#8f6825;">ESPECIFICAÇÃO DE REQUISITOS DE SOFTWARE</div>
+  <h1 style="font-size:24pt;font-weight:700;letter-spacing:-.6px;line-height:1.12;margin:6px 0 8px;">Simulador de FCI — Ficha de Conteúdo de Importação</h1>
+  <p style="font-size:11pt;color:#5c5854;margin:0 0 16px;">Requisitos funcionais detalhados para simulação e análise do Conteúdo de Importação (CI%) em cenários gerenciais, com integração a bases externas e governança por perfil de acesso.</p>
+
+  <table class="kept" style="margin-bottom:6px;">
+    <tbody>
+      <tr><td style="width:22%;background:#faf8f3;font-weight:600;">Documento</td><td>Especificação de Requisitos Funcionais — Simulador de FCI</td><td style="width:20%;background:#faf8f3;font-weight:600;">Versão</td><td style="width:16%;">1.0</td></tr>
+      <tr><td style="background:#faf8f3;font-weight:600;">Produto</td><td>Simulador de FCI (protótipo web navegável)</td><td style="background:#faf8f3;font-weight:600;">Data</td><td>30/07/2026</td></tr>
+      <tr><td style="background:#faf8f3;font-weight:600;">Áreas requerentes</td><td>Custos · Controladoria · Fiscal/Tributário · Pricing · Compras</td><td style="background:#faf8f3;font-weight:600;">Situação</td><td>Para aprovação</td></tr>
+      <tr><td style="background:#faf8f3;font-weight:600;">Áreas intervenientes</td><td>Industrial · PCP · SGI/CGI · TI</td><td style="background:#faf8f3;font-weight:600;">Requisitos</td><td>100 RF · 12 RN · 10 RNF</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:8.5pt;color:#8b8681;margin:0 0 4px;">A aprovação deste documento pela área requerente autoriza a construção conforme aqui especificado. Alterações posteriores seguem controle de versão e nova aprovação.</p>
+
+  <h2>1 · Objetivo</h2>
+  <p>Estabelecer os requisitos funcionais do <b>Simulador de FCI</b>, ferramenta destinada à criação e análise de cenários simulados de Conteúdo de Importação, permitindo antecipar o enquadramento tributário de produtos acabados antes da apuração oficial e apoiar decisões de Compras, Pricing, Custos e Tributário.</p>
+  <p>O simulador responde à pergunta central: <b>dado um conjunto de premissas de compra, estrutura de produto, câmbio e preço de saída, qual será o CI% de cada produto e qual o enquadramento tributário resultante?</b></p>
+
+  <h2>2 · Escopo</h2>
+  <h3>2.1 Dentro do escopo</h3>
+  <ul>
+    <li>Criação, versionamento e comparação de cenários de simulação de CI%.</li>
+    <li>Cálculo do CI% em cascata Matéria-Prima → Produto Intermediário → Produto Acabado, com fatores de faixa.</li>
+    <li>Alteração completa de variáveis e estruturas de dados para fins de simulação, isolada por cenário.</li>
+    <li>Configuração das fontes de dados das integrações com bases externas e dos parâmetros mestres.</li>
+    <li>Classificação de enquadramento, impacto de alíquota e ICMS-ST, alertas de risco e reemissão.</li>
+    <li>Governança: perfis de acesso, congelamento de premissas, validação técnica e rastreabilidade.</li>
+  </ul>
+  <h3>2.2 Fora do escopo</h3>
+  <ul>
+    <li>Emissão, assinatura ou transmissão da FCI oficial à SEFAZ — o simulador não substitui a obrigação acessória.</li>
+    <li>Alteração do cadastro oficial de produtos, estruturas, insumos ou fornecedores no ERP.</li>
+    <li>Apuração fiscal definitiva, escrituração e cálculo de tributos para recolhimento.</li>
+    <li>Movimentações posteriores de distribuidores entre estados.</li>
+  </ul>
+
+  <h2>3 · Base legal e definições</h2>
+  <p>Resolução do Senado Federal 13/2012 · Convênio ICMS 38/2013 · Ajuste SINIEF 19/2012 · Lei Complementar 87/1996 (Lei Kandir).</p>
+  <table class="kept">
+    <thead><tr><th style="width:26%;">TERMO</th><th>DEFINIÇÃO ADOTADA NESTE DOCUMENTO</th></tr></thead>
+    <tbody>
+      <tr><td class="nome">FCI</td><td>Ficha de Conteúdo de Importação — declaração do percentual de conteúdo importado de mercadoria industrializada no país.</td></tr>
+      <tr><td class="nome">CI%</td><td>Conteúdo de Importação: razão entre a parcela importada e o denominador parametrizado, expressa em percentual.</td></tr>
+      <tr><td class="nome">Parcela importada</td><td>Somatório do custo FCI dos componentes importados, multiplicado pela quantidade e pelo fator de faixa aplicável.</td></tr>
+      <tr><td class="nome">Custo FCI</td><td>Valor total de entrada do insumo deduzidos ICMS e IPI. PIS e COFINS não são deduzidos.</td></tr>
+      <tr><td class="nome">Fator de faixa</td><td>Multiplicador aplicado ao custo do componente na cascata conforme sua faixa de CI: 0 · 0,5 · 1.</td></tr>
+      <tr><td class="nome">Cenário</td><td>Conjunto isolado e versionado de premissas, estruturas e resultados de uma simulação.</td></tr>
+      <tr><td class="nome">Grupo de insumo</td><td>Agrupamento funcional de itens intercambiáveis (maltes, lúpulos, latas, tampas, rótulos, mostos).</td></tr>
+      <tr><td class="nome">Denominador</td><td>Base de divisão do CI%: saída média ponderada nacional (padrão) ou custo total da mercadoria.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>4 · Atores e perfis de acesso</h2>
+  <table class="kept">
+    <thead><tr><th style="width:20%;">ÁREA</th><th style="width:16%;">PERFIL</th><th>ATRIBUIÇÃO NO SIMULADOR</th></tr></thead>
+    <tbody>
+      <tr><td class="nome">Custos</td><td>Simulador</td><td>Abre cenários, define premissas, calcula e consolida para decisão.</td></tr>
+      <tr><td class="nome">Controladoria</td><td>Validador</td><td>Valida, aprova, congela premissas e define a base de cálculo do denominador.</td></tr>
+      <tr><td class="nome">Fiscal / Tributário</td><td>Simulador</td><td>Classifica origem, CST e conteúdo de importação; avalia enquadramento e reemissão.</td></tr>
+      <tr><td class="nome">Pricing</td><td>Simulador</td><td>Mantém preço de saída, volumes e mix de UF de destino.</td></tr>
+      <tr><td class="nome">Compras</td><td>Simulador</td><td>Mantém fornecedor, FOB, frete e seguro internacional, contratos e moeda.</td></tr>
+      <tr><td class="nome">Industrial · PCP</td><td>Especialista</td><td>Altera a estrutura e a receita padrão em modo avançado; valida tecnicamente.</td></tr>
+      <tr><td class="nome">SGI / CGI</td><td>Validador</td><td>Valida tecnicamente alterações de estrutura e aprova cenários avançados.</td></tr>
+      <tr><td class="nome">Negócio</td><td>Aprovador</td><td>Aprova e consolida o cenário para decisão executiva.</td></tr>
+      <tr><td class="nome">TI</td><td>Administrador</td><td>Configura integrações, fontes de dados e parâmetros mestres.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>5 · Visão geral do processo</h2>
+  <p>O simulador materializa o fluxo mapeado no SIPOC do processo, em onze etapas: (1) abertura do cenário por orçamento anual ou revisão mensal; (2) carga da estrutura de origem do ERP; (3) decomposição do produto acabado e relacionamento dos insumos por SKU; (4) classificação de origem e conteúdo de importação; (5) parametrização de compra e custos de entrada; (6) cálculo do denominador; (7) cálculo do CI% consolidado em cascata; (8) classificação de enquadramento e impacto tributário; (9) avaliação de gatilhos de alerta; (10) consolidação do cenário para decisão; (11) encaminhamento da decisão às áreas.</p>
+
+  <h2>6 · Requisitos funcionais</h2>
+  <p style="font-size:9pt;color:#5c5854;">Cada requisito traz sua descrição e o respectivo critério de aceite, que constitui a base para o teste de aceitação pela área requerente.</p>
+
+  <h3>6.1 Gestão de cenários e governança</h3>
+  <table>
+    <thead><tr><th style="width:9%;">ID</th><th style="width:21%;">REQUISITO</th><th>DESCRIÇÃO E CRITÉRIO DE ACEITE</th></tr></thead>
+    <tbody>
+      <tr><td class="id">RF-001</td><td class="nome">Criar cenário</td><td>Permitir a abertura de cenário identificando tipo (orçamento anual ou revisão mensal), ciclo de referência, autor e versão inicial. <span class="ac"><b>Aceite:</b> cenário criado recebe identificador único, versão 1, status Rascunho e registro de autor e data.</span></td></tr>
+      <tr><td class="id">RF-002</td><td class="nome">Carregar estrutura de origem</td><td>Carregar do ERP a estrutura de produtos, insumos e fornecedores como ponto de partida do cenário. <span class="ac"><b>Aceite:</b> ao abrir o cenário, a lista técnica e o cadastro de insumos refletem a origem integrada, sem digitação manual.</span></td></tr>
+      <tr><td class="id">RF-003</td><td class="nome">Duplicar como nova versão</td><td>Duplicar um cenário existente gerando nova versão, preservando integralmente o cenário de origem. <span class="ac"><b>Aceite:</b> a duplicação incrementa a versão, atribui novo autor e data, e não altera o cenário original.</span></td></tr>
+      <tr><td class="id">RF-004</td><td class="nome">Painel de cenários</td><td>Apresentar painel com todos os cenários e indicadores: CI% médio ponderado, quantidade de produtos, produtos acima de 40% e distribuição por faixa. <span class="ac"><b>Aceite:</b> os indicadores recalculam automaticamente após qualquer alteração de premissa.</span></td></tr>
+      <tr><td class="id">RF-005</td><td class="nome">Congelar premissas</td><td>Congelar o cenário após o cálculo, travando todas as premissas para fins de rastreabilidade. <span class="ac"><b>Aceite:</b> cenário congelado impede edição em todos os campos e exibe aviso com a ação para criar nova versão.</span></td></tr>
+      <tr><td class="id">RF-006</td><td class="nome">Versionamento e rastreabilidade</td><td>Manter histórico com autor, data, versão, status e origem dos dados de cada cenário. <span class="ac"><b>Aceite:</b> toda alteração após o congelamento gera nova versão identificável, com o vínculo à versão anterior.</span></td></tr>
+      <tr><td class="id">RF-007</td><td class="nome">Isolamento do cenário</td><td>Garantir que toda edição de variável ou estrutura tenha efeito exclusivamente no cenário em que foi realizada. <span class="ac"><b>Aceite:</b> alteração em um cenário não altera outros cenários nem o cadastro oficial de origem.</span></td></tr>
+      <tr><td class="id">RF-008</td><td class="nome">Consolidar para decisão</td><td>Consolidar o cenário, marcando-o como calculado e apto à decisão executiva. <span class="ac"><b>Aceite:</b> a consolidação é recusada quando houver erro de validação de estrutura pendente.</span></td></tr>
+      <tr><td class="id">RF-009</td><td class="nome">Encaminhamento às áreas</td><td>Registrar no relatório os direcionamentos decorrentes do cenário, separados por área responsável. <span class="ac"><b>Aceite:</b> o relatório apresenta blocos distintos para Compras, Pricing e Fiscal/Tributário.</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.2 Estrutura do produto (lista técnica)</h3>
+  <table>
+    <thead><tr><th style="width:9%;">ID</th><th style="width:21%;">REQUISITO</th><th>DESCRIÇÃO E CRITÉRIO DE ACEITE</th></tr></thead>
+    <tbody>
+      <tr><td class="id">RF-010</td><td class="nome">Estrutura em cascata</td><td>Exibir a estrutura do produto em cascata MP → PI → PA, com hierarquia navegável e identificação do tipo de cada nó. <span class="ac"><b>Aceite:</b> componentes intermediários exibem seus próprios insumos em nível subordinado.</span></td></tr>
+      <tr><td class="id">RF-011</td><td class="nome">Quantidade da receita</td><td>Permitir alteração da quantidade de cada componente, condicionada ao modo avançado e ao perfil de acesso. <span class="ac"><b>Aceite:</b> em modo padrão o campo permanece bloqueado com indicação do motivo.</span></td></tr>
+      <tr><td class="id">RF-012</td><td class="nome">Custo industrial</td><td>Permitir a parametrização de mão de obra e custos industriais (overhead) por produto. <span class="ac"><b>Aceite:</b> o overhead compõe o custo total e não integra a parcela importada.</span></td></tr>
+      <tr><td class="id">RF-013</td><td class="nome">Métricas por componente</td><td>Apresentar por componente: quantidade, unidade, origem, fornecedor, custo FCI unitário, CI do nó, fator aplicado e parcela importada. <span class="ac"><b>Aceite:</b> a soma das parcelas dos componentes é igual à parcela importada do produto.</span></td></tr>
+      <tr><td class="id">RF-014</td><td class="nome">Especificação técnica</td><td>Registrar a especificação do SKU (volume e unidade) como referência de consistência da estrutura. <span class="ac"><b>Aceite:</b> divergência entre volume envasado e especificação gera aviso identificando o produto.</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.3 Substituição de componentes</h3>
+  <table>
+    <thead><tr><th style="width:9%;">ID</th><th style="width:21%;">REQUISITO</th><th>DESCRIÇÃO E CRITÉRIO DE ACEITE</th></tr></thead>
+    <tbody>
+      <tr><td class="id">RF-015</td><td class="nome">Ação orientada</td><td>Substituir a dinâmica de simples exclusão e inclusão por uma ação orientada de substituição de componente, conduzida em etapas. <span class="ac"><b>Aceite:</b> a estrutura não oferece exclusão livre de componente; toda troca ocorre pela ação de substituição.</span></td></tr>
+      <tr><td class="id">RF-016</td><td class="nome">Substituição integral</td><td>Permitir substituição integral, em que o item substituto assume 100% da utilização. <span class="ac"><b>Aceite:</b> após a substituição integral o item original permanece na estrutura com proporção zero.</span></td></tr>
+      <tr><td class="id">RF-017</td><td class="nome">Substituição parcial</td><td>Permitir substituição parcial, exigindo do usuário a proporção de utilização de cada item. <span class="ac"><b>Aceite:</b> ao informar a proporção de um item, a do outro é complementada automaticamente para totalizar 100%.</span></td></tr>
+      <tr><td class="id">RF-018</td><td class="nome">Cálculo das quantidades</td><td>Calcular automaticamente as quantidades de cada alternativa a partir da quantidade original da receita e da proporção informada. <span class="ac"><b>Aceite:</b> a soma das quantidades das alternativas é igual à quantidade original da receita.</span></td></tr>
+      <tr><td class="id">RF-019</td><td class="nome">Transparência das alternativas</td><td>Manter os componentes original e substituto visíveis na estrutura, inclusive quando um deles estiver com percentual zero. <span class="ac"><b>Aceite:</b> item com proporção zero permanece listado, identificado como não utilizado, sem ser removido.</span></td></tr>
+      <tr><td class="id">RF-020</td><td class="nome">Tipos de troca</td><td>Suportar substituição entre item nacional e importado, entre fornecedores distintos e entre alternativas do mesmo grupo de insumo. <span class="ac"><b>Aceite:</b> alternativas do mesmo grupo são apresentadas em primeiro lugar e a natureza da troca é sinalizada.</span></td></tr>
+      <tr><td class="id">RF-021</td><td class="nome">Substituição de intermediário</td><td>Permitir a substituição de componentes intermediários, não apenas de matérias-primas. <span class="ac"><b>Aceite:</b> a troca de um intermediário por outro do mesmo grupo é aplicada e recalculada sem erro de validação.</span></td></tr>
+      <tr><td class="id">RF-022</td><td class="nome">Prévia do efeito</td><td>Exibir, antes da confirmação, o CI% atual, o CI% simulado, a faixa resultante e a variação em pontos percentuais. <span class="ac"><b>Aceite:</b> a prévia acompanha em tempo real a alteração do item substituto e da proporção.</span></td></tr>
+      <tr><td class="id">RF-023</td><td class="nome">Ajuste na estrutura</td><td>Permitir o ajuste da proporção diretamente na estrutura, com indicação do total e ação de normalização para 100%. <span class="ac"><b>Aceite:</b> proporção total diferente de 100% é sinalizada e a normalização redistribui proporcionalmente.</span></td></tr>
+      <tr><td class="id">RF-024</td><td class="nome">Reversão</td><td>Permitir reverter a substituição, restabelecendo o componente original da receita. <span class="ac"><b>Aceite:</b> após a reversão a estrutura retorna ao componente original com 100% e sem alternativas residuais.</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.4 Validadores da estrutura</h3>
+  <table>
+    <thead><tr><th style="width:9%;">ID</th><th style="width:21%;">REQUISITO</th><th>DESCRIÇÃO E CRITÉRIO DE ACEITE</th></tr></thead>
+    <tbody>
+      <tr><td class="id">RF-025</td><td class="nome">Bloqueio por inconsistência</td><td>Impedir que um cenário seja salvo, executado ou consolidado com a estrutura incompleta ou inconsistente. <span class="ac"><b>Aceite:</b> havendo erro, as ações de consolidar e congelar ficam indisponíveis e o motivo é declarado.</span></td></tr>
+      <tr><td class="id">RF-026</td><td class="nome">Componentes obrigatórios</td><td>Validar a presença de todos os componentes obrigatórios definidos na receita do produto. <span class="ac"><b>Aceite:</b> ausência de grupo obrigatório gera erro nomeando o grupo e a quantidade esperada.</span></td></tr>
+      <tr><td class="id">RF-027</td><td class="nome">Quantidade por grupo</td><td>Validar a quantidade total por grupo obrigatório contra a receita, respeitando a tolerância definida. <span class="ac"><b>Aceite:</b> embalagem que exige 12 tampas não é aceita com 11, indicando o informado e o esperado.</span></td></tr>
+      <tr><td class="id">RF-028</td><td class="nome">Soma das proporções</td><td>Validar que a soma das proporções entre alternativas seja exatamente 100%. <span class="ac"><b>Aceite:</b> soma diferente de 100% impede a consolidação e identifica o componente afetado.</span></td></tr>
+      <tr><td class="id">RF-029</td><td class="nome">Distribuição vs original</td><td>Alertar quando a distribuição informada exceder ou ficar abaixo da quantidade original da receita. <span class="ac"><b>Aceite:</b> a mensagem declara o sentido do desvio (acima ou abaixo) e a quantidade de referência.</span></td></tr>
+      <tr><td class="id">RF-030</td><td class="nome">Integridade técnica</td><td>Garantir que a simulação não altere inadvertidamente as características técnicas do produto. <span class="ac"><b>Aceite:</b> alteração que rompa a especificação do SKU é sinalizada antes da consolidação.</span></td></tr>
+      <tr><td class="id">RF-031</td><td class="nome">Confronto imediato</td><td>Confrontar o usuário no momento da alteração, e não apenas após o cálculo final, oferecendo desfazer ou manter e corrigir. <span class="ac"><b>Aceite:</b> a inconsistência é apresentada imediatamente após a edição, com a ação de desfazer disponível.</span></td></tr>
+      <tr><td class="id">RF-032</td><td class="nome">Diagnóstico consolidado</td><td>Disponibilizar painel com todos os erros e avisos do cenário, indicando onde cada um ocorre. <span class="ac"><b>Aceite:</b> o painel distingue erros de avisos e informa o produto ou cadastro de origem.</span></td></tr>
+      <tr><td class="id">RF-033</td><td class="nome">Coerência fiscal</td><td>Validar a coerência entre classificação adotada, conteúdo de importação informado e CST de origem. <span class="ac"><b>Aceite:</b> divergência entre CST informado e sugerido gera aviso com o valor esperado.</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.5 Alterações avançadas da receita e perfis</h3>
+  <table>
+    <thead><tr><th style="width:9%;">ID</th><th style="width:21%;">REQUISITO</th><th>DESCRIÇÃO E CRITÉRIO DE ACEITE</th></tr></thead>
+    <tbody>
+      <tr><td class="id">RF-034</td><td class="nome">Modalidade avançada</td><td>Disponibilizar modalidade avançada para cenários em que seja necessário alterar a própria receita padrão. <span class="ac"><b>Aceite:</b> a alternância entre modo padrão e avançado é explícita e altera o bloqueio dos campos de receita.</span></td></tr>
+      <tr><td class="id">RF-035</td><td class="nome">Controle por perfil</td><td>Controlar a funcionalidade por perfil, diferenciando quem simula sobre a receita padrão, quem tem permissão para alterar a estrutura e quem valida ou aprova. <span class="ac"><b>Aceite:</b> perfil sem permissão não ativa o modo avançado e recebe indicação do impedimento.</span></td></tr>
+      <tr><td class="id">RF-036</td><td class="nome">Submissão à validação</td><td>Permitir que simulação com alterações avançadas seja submetida à validação técnica, com destaque claro dos pontos modificados. <span class="ac"><b>Aceite:</b> a submissão lista cada ponto alterado com valor padrão e valor no cenário.</span></td></tr>
+      <tr><td class="id">RF-037</td><td class="nome">Decisão de validação</td><td>Registrar a decisão de validação técnica, identificando responsável, área e data. <span class="ac"><b>Aceite:</b> aprovação ou reprovação fica registrada e visível no cenário.</span></td></tr>
+      <tr><td class="id">RF-038</td><td class="nome">Consolidação condicionada</td><td>Condicionar a consolidação de cenário com alteração de receita à aprovação técnica prévia. <span class="ac"><b>Aceite:</b> cenário avançado com alteração de receita não aprovada não pode ser consolidado.</span></td></tr>
+      <tr><td class="id">RF-039</td><td class="nome">Matriz de permissões</td><td>Apresentar a matriz de permissões por área e perfil, destacando o perfil ativo. <span class="ac"><b>Aceite:</b> a matriz indica, por área, as permissões de estrutura, modo avançado, lote, validação e aprovação.</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.6 Alterações em massa</h3>
+  <table>
+    <thead><tr><th style="width:9%;">ID</th><th style="width:21%;">REQUISITO</th><th>DESCRIÇÃO E CRITÉRIO DE ACEITE</th></tr></thead>
+    <tbody>
+      <tr><td class="id">RF-040</td><td class="nome">Substituição em lote</td><td>Implementar substituição em lote por grupo de insumo — todas as tampas, todas as latas, todos os maltes e demais grupos existentes na ficha técnica. <span class="ac"><b>Aceite:</b> a seleção do grupo relaciona todas as posições da ficha técnica que o utilizam.</span></td></tr>
+      <tr><td class="id">RF-041</td><td class="nome">Proporção por grupo</td><td>Permitir aplicar uma proporção nacional/importado a todos os produtos que utilizam determinado grupo. <span class="ac"><b>Aceite:</b> a proporção informada é aplicada uniformemente às estruturas selecionadas.</span></td></tr>
+      <tr><td class="id">RF-042</td><td class="nome">Seleção de estruturas</td><td>Permitir incluir ou excluir estruturas do lote antes da aplicação. <span class="ac"><b>Aceite:</b> apenas as estruturas selecionadas são alteradas; as demais permanecem intactas.</span></td></tr>
+      <tr><td class="id">RF-043</td><td class="nome">Prévia do lote</td><td>Exibir previamente quais produtos e estruturas serão afetados pela alteração em massa, com o impacto estimado no CI%. <span class="ac"><b>Aceite:</b> a prévia mostra CI% antes e depois, variação em p.p. e mudança de faixa, antes de aplicar.</span></td></tr>
+      <tr><td class="id">RF-044</td><td class="nome">Alteração pontual</td><td>Manter a possibilidade de alteração pontual por SKU, independente da operação em lote. <span class="ac"><b>Aceite:</b> a substituição individual permanece disponível na estrutura após a existência do recurso em lote.</span></td></tr>
+      <tr><td class="id">RF-045</td><td class="nome">Operação sem efeito</td><td>Impedir a aplicação em lote quando o item substituto já for o original de todas as estruturas selecionadas. <span class="ac"><b>Aceite:</b> a ação fica indisponível com indicação de que não há substituição a realizar.</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.7 Origem e conteúdo de importação do insumo</h3>
+  <table>
+    <thead><tr><th style="width:9%;">ID</th><th style="width:21%;">REQUISITO</th><th>DESCRIÇÃO E CRITÉRIO DE ACEITE</th></tr></thead>
+    <tbody>
+      <tr><td class="id">RF-046</td><td class="nome">Classificação do item</td><td>Distinguir claramente as classificações: nacional; importado diretamente; estrangeiro adquirido no mercado interno; nacional com conteúdo de importação. <span class="ac"><b>Aceite:</b> legenda apresenta as quatro classificações com descrição e CST correspondente.</span></td></tr>
+      <tr><td class="id">RF-047</td><td class="nome">Origem do cadastro</td><td>Utilizar a informação de origem do cadastro como filtro ou referência, sem assumir que ela é suficiente para determinar o conteúdo de importação usado na simulação. <span class="ac"><b>Aceite:</b> a origem do cadastro é exibida e a divergência com a classificação adotada é sinalizada, sem bloquear.</span></td></tr>
+      <tr><td class="id">RF-048</td><td class="nome">Percentual e faixa</td><td>Para componentes importados ou com conteúdo de importação, permitir informar o percentual de utilização, a faixa ou percentual de conteúdo de importação aplicável e a classificação a considerar no cálculo. <span class="ac"><b>Aceite:</b> é possível optar entre percentual informado e faixa aplicável, e o CI adotado é exibido.</span></td></tr>
+      <tr><td class="id">RF-049</td><td class="nome">Bloqueio de campos</td><td>Para itens efetivamente nacionais, bloquear os campos que não sejam aplicáveis. <span class="ac"><b>Aceite:</b> item nacional não permite edição de conteúdo de importação nem de custos de importação.</span></td></tr>
+      <tr><td class="id">RF-050</td><td class="nome">CST sugerido</td><td>Sugerir o CST de origem conforme a classificação e a faixa adotadas, permitindo ajuste manual. <span class="ac"><b>Aceite:</b> a alteração de classificação atualiza o CST sugerido e a divergência manual é sinalizada.</span></td></tr>
+      <tr><td class="id">RF-051</td><td class="nome">Separação de variáveis</td><td>Tratar separadamente a origem do item e o percentual de conteúdo importado, por serem variáveis distintas. <span class="ac"><b>Aceite:</b> as duas informações ocupam campos próprios e são editáveis de forma independente.</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.8 Simulação cambial</h3>
+  <table>
+    <thead><tr><th style="width:9%;">ID</th><th style="width:21%;">REQUISITO</th><th>DESCRIÇÃO E CRITÉRIO DE ACEITE</th></tr></thead>
+    <tbody>
+      <tr><td class="id">RF-052</td><td class="nome">Moedas parametrizáveis</td><td>Permitir a parametrização das moedas utilizadas nos insumos, contemplando dólar, euro, libra esterlina e franco suíço. <span class="ac"><b>Aceite:</b> as quatro moedas estão disponíveis com cotação editável e variação frente à base.</span></td></tr>
+      <tr><td class="id">RF-053</td><td class="nome">Vínculo insumo-moeda</td><td>Vincular cada insumo à moeda utilizada no Portal de Custos ou na fonte correspondente. <span class="ac"><b>Aceite:</b> a moeda de cada insumo importado é exibida e o painel de câmbio indica os insumos vinculados.</span></td></tr>
+      <tr><td class="id">RF-054</td><td class="nome">Recálculo em lote</td><td>Ao alterar a cotação de uma moeda, recalcular todos os itens vinculados a ela. <span class="ac"><b>Aceite:</b> a alteração de uma cotação atualiza simultaneamente o custo FCI de todos os insumos daquela moeda.</span></td></tr>
+      <tr><td class="id">RF-055</td><td class="nome">Alternativa cadastral</td><td>Tratar a inclusão de fornecedor ou item em nova moeda como alternativa cadastral dentro do cenário, sem alterar o cadastro oficial. <span class="ac"><b>Aceite:</b> o item incluído é identificado como alternativa do cenário e não aparece nos demais cenários.</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.9 Cálculo do CI% e recálculo imediato</h3>
+  <table>
+    <thead><tr><th style="width:9%;">ID</th><th style="width:21%;">REQUISITO</th><th>DESCRIÇÃO E CRITÉRIO DE ACEITE</th></tr></thead>
+    <tbody>
+      <tr><td class="id">RF-056</td><td class="nome">Fórmula e versão</td><td>Calcular o CI% como a razão entre a parcela importada e o denominador parametrizado, com identificação da versão da fórmula. <span class="ac"><b>Aceite:</b> a versão da fórmula é exibida nos parâmetros mestres e registrada no cenário.</span></td></tr>
+      <tr><td class="id">RF-057</td><td class="nome">Cascata e fatores</td><td>Aplicar a cascata MP → PI → PA com os fatores de faixa 0, 0,5 e 1 conforme o CI de cada nó. <span class="ac"><b>Aceite:</b> o fator aplicado é exibido por componente e corresponde à faixa do respectivo CI.</span></td></tr>
+      <tr><td class="id">RF-058</td><td class="nome">Custo FCI</td><td>Apurar o custo FCI do insumo como valor total de entrada deduzidos ICMS e IPI, sem dedução de PIS e COFINS. <span class="ac"><b>Aceite:</b> o custo apurado confere com a memória de cálculo apresentada na parametrização.</span></td></tr>
+      <tr><td class="id">RF-059</td><td class="nome">Valor aduaneiro</td><td>Para insumo importado diretamente, compor o custo pelo valor aduaneiro: FOB convertido pelo câmbio, frete e seguro internacional, II, IPI e PIS/COFINS de importação. <span class="ac"><b>Aceite:</b> todos os componentes do valor aduaneiro são editáveis e integram o custo FCI.</span></td></tr>
+      <tr><td class="id">RF-060</td><td class="nome">Denominador</td><td>Parametrizar o denominador por média ponderada global das saídas interestaduais, considerando volume e preço por destino, com alternativa pelo custo total. <span class="ac"><b>Aceite:</b> a alternância de base recalcula o CI% e a base vigente é identificada na tela.</span></td></tr>
+      <tr><td class="id">RF-061</td><td class="nome">Enquadramento</td><td>Classificar o enquadramento nas faixas legais e apresentar a alíquota interestadual resultante. <span class="ac"><b>Aceite:</b> CI% acima de 40% resulta em alíquota de 4%; caso contrário, 7% ou 12% conforme destino.</span></td></tr>
+      <tr><td class="id">RF-062</td><td class="nome">Impacto ICMS-ST</td><td>Simular o impacto na alíquota e no ICMS-ST, com MVA e alíquota interna do destino parametrizáveis. <span class="ac"><b>Aceite:</b> a comparação apresenta ICMS próprio e ICMS-ST nas duas alíquotas, com a diferença por unidade.</span></td></tr>
+      <tr><td class="id">RF-063</td><td class="nome">Recálculo imediato</td><td>Atualizar o conteúdo de importação e o resultado do FCI em tempo real conforme o usuário troca componentes, altera proporções, ajusta câmbio, modifica volumes ou inclui novo insumo. <span class="ac"><b>Aceite:</b> nenhuma das cinco ações exige comando manual de recálculo.</span></td></tr>
+      <tr><td class="id">RF-064</td><td class="nome">Exibição contínua</td><td>Exibir continuamente o percentual de conteúdo de importação do produto, com faixa e alíquota. <span class="ac"><b>Aceite:</b> o CI% permanece visível em todas as abas da simulação do produto selecionado.</span></td></tr>
+      <tr><td class="id">RF-065</td><td class="nome">Maior contribuição</td><td>Evidenciar quais componentes possuem maior contribuição no resultado, considerando quantidade, custo e peso na composição. <span class="ac"><b>Aceite:</b> a composição apresenta os componentes ordenados por contribuição, com destaque do maior.</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.10 Volumes, preços e destinos</h3>
+  <table>
+    <thead><tr><th style="width:9%;">ID</th><th style="width:21%;">REQUISITO</th><th>DESCRIÇÃO E CRITÉRIO DE ACEITE</th></tr></thead>
+    <tbody>
+      <tr><td class="id">RF-066</td><td class="nome">Volumes por UF</td><td>Incorporar os volumes de venda por UF de destino ao cálculo do denominador. <span class="ac"><b>Aceite:</b> o preço médio ponderado reflete volume e preço de cada UF informada.</span></td></tr>
+      <tr><td class="id">RF-067</td><td class="nome">Carga do Sistema de Preços</td><td>Utilizar como referência os volumes e preços disponíveis no Sistema de Preços, com possibilidade de carga complementar. <span class="ac"><b>Aceite:</b> existem ações distintas para substituir a base e para complementar as UFs ausentes.</span></td></tr>
+      <tr><td class="id">RF-068</td><td class="nome">Ajuste no cenário</td><td>Permitir que o usuário ajuste volumes e preços dentro do cenário. <span class="ac"><b>Aceite:</b> a edição de volume ou preço recalcula imediatamente o denominador e o CI%.</span></td></tr>
+      <tr><td class="id">RF-069</td><td class="nome">Média ponderada nacional</td><td>Calcular o conteúdo de importação pela saída média ponderada nacional, mantendo a visão por estado como apoio à análise. <span class="ac"><b>Aceite:</b> o resultado oficial do cenário não é segmentado por UF; a visão por UF é identificada como apoio.</span></td></tr>
+      <tr><td class="id">RF-070</td><td class="nome">Peso por UF</td><td>Exibir o peso de cada UF no volume e no preço médio. <span class="ac"><b>Aceite:</b> os pesos são apresentados por UF e totalizam 100%.</span></td></tr>
+      <tr><td class="id">RF-071</td><td class="nome">Sensibilidade por UF</td><td>Facilitar a identificação de estados nos quais uma alteração de preço poderá afetar o resultado. <span class="ac"><b>Aceite:</b> cada UF apresenta o efeito no CI% de uma variação de preço definida.</span></td></tr>
+      <tr><td class="id">RF-072</td><td class="nome">Escopo da saída</td><td>Considerar a saída registrada pela empresa, desconsiderando movimentações posteriores de distribuidores entre estados. <span class="ac"><b>Aceite:</b> a regra está declarada na tela de volumes e destinos.</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.11 Comparação de cenários</h3>
+  <table>
+    <thead><tr><th style="width:9%;">ID</th><th style="width:21%;">REQUISITO</th><th>DESCRIÇÃO E CRITÉRIO DE ACEITE</th></tr></thead>
+    <tbody>
+      <tr><td class="id">RF-073</td><td class="nome">Seleção de cenários</td><td>Permitir a comparação de múltiplos cenários, em até dez simultaneamente. <span class="ac"><b>Aceite:</b> a inclusão e exclusão de cenários na comparação é imediata e respeita o limite.</span></td></tr>
+      <tr><td class="id">RF-074</td><td class="nome">Matriz CI%</td><td>Apresentar matriz de CI% por produto e cenário, com identificação da faixa e amplitude entre cenários. <span class="ac"><b>Aceite:</b> cada célula indica a faixa por cor e a linha apresenta a amplitude em pontos percentuais.</span></td></tr>
+      <tr><td class="id">RF-075</td><td class="nome">Drill-down</td><td>Permitir detalhamento a partir do produto até os componentes e os insumos dos componentes intermediários. <span class="ac"><b>Aceite:</b> produtos e intermediários são expansíveis; itens sem nível inferior não apresentam ação de expansão.</span></td></tr>
+      <tr><td class="id">RF-076</td><td class="nome">Grau de impacto</td><td>Expressar o impacto de cada componente em pontos percentuais do CI%, declarando a base de cada nível. <span class="ac"><b>Aceite:</b> no nível do produto as contribuições somam o CI% apresentado; no nível do insumo a base é o próprio intermediário, com a ressalva declarada.</span></td></tr>
+      <tr><td class="id">RF-077</td><td class="nome">Sensibilidade entre cenários</td><td>Apresentar gráfico comparativo do CI% de um produto em foco entre os cenários selecionados. <span class="ac"><b>Aceite:</b> a troca do produto em foco atualiza o gráfico e as faixas.</span></td></tr>
+      <tr><td class="id">RF-078</td><td class="nome">Edição sem sair da tela</td><td>Disponibilizar, ao acionar um cenário na comparação, painel lateral com seus parâmetros editáveis, permitindo alterá-lo a partir da própria tela de comparação. <span class="ac"><b>Aceite:</b> o painel permite editar câmbio, classificação e conteúdo de importação dos insumos, preço de entrada e proporções de substituição.</span></td></tr>
+      <tr><td class="id">RF-079</td><td class="nome">Recálculo ao vivo</td><td>Recalcular a matriz de comparação imediatamente após qualquer alteração feita no painel lateral. <span class="ac"><b>Aceite:</b> a alteração de uma cotação no painel altera as colunas correspondentes da matriz sem recarregar a tela.</span></td></tr>
+      <tr><td class="id">RF-080</td><td class="nome">Análise assistida</td><td>Disponibilizar recurso de conversação iterativa que responda a perguntas sobre os cenários selecionados, com domínio dos dados apresentados na simulação e da legislação aplicável. <span class="ac"><b>Aceite:</b> as respostas citam produtos, cenários e valores existentes no contexto selecionado e mantêm o histórico da conversa.</span></td></tr>
+      <tr><td class="id">RF-081</td><td class="nome">Análises padrão</td><td>Oferecer análises padrão solicitáveis para o contexto selecionado. <span class="ac"><b>Aceite:</b> estão disponíveis, no mínimo: divergência de CI% entre cenários, insumos de maior impacto, risco fiscal e reemissão, sensibilidade cambial, caminho para ficar abaixo de 40%, efeito de preço e mix de UF, e recomendação executiva.</span></td></tr>
+      <tr><td class="id">RF-082</td><td class="nome">Ressalva de uso</td><td>Declarar que a análise assistida tem caráter gerencial, sem validade fiscal. <span class="ac"><b>Aceite:</b> a ressalva é apresentada junto ao recurso.</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.12 Alertas e relatório</h3>
+  <table>
+    <thead><tr><th style="width:9%;">ID</th><th style="width:21%;">REQUISITO</th><th>DESCRIÇÃO E CRITÉRIO DE ACEITE</th></tr></thead>
+    <tbody>
+      <tr><td class="id">RF-083</td><td class="nome">Mudança de faixa</td><td>Alertar quando o produto migrar de faixa de enquadramento em relação à FCI vigente. <span class="ac"><b>Aceite:</b> o alerta informa a faixa anterior, a nova faixa e os percentuais.</span></td></tr>
+      <tr><td class="id">RF-084</td><td class="nome">Reemissão da FCI</td><td>Alertar quando a variação do CI% em relação à FCI vigente exceder o gatilho parametrizado. <span class="ac"><b>Aceite:</b> variação superior ao gatilho gera alerta identificando o produto e a variação em p.p.</span></td></tr>
+      <tr><td class="id">RF-085</td><td class="nome">Risco fiscal</td><td>Alertar produtos com CI% acima de 40%, indicando o efeito de alíquota e o impacto no crédito do cliente. <span class="ac"><b>Aceite:</b> o alerta cita a base legal e o efeito tributário.</span></td></tr>
+      <tr><td class="id">RF-086</td><td class="nome">Encaminhamento</td><td>Indicar em cada alerta a área responsável pelo tratamento. <span class="ac"><b>Aceite:</b> todo alerta apresenta a área de encaminhamento.</span></td></tr>
+      <tr><td class="id">RF-087</td><td class="nome">Relatório executivo</td><td>Consolidar relatório com resultado por produto: CI%, enquadramento, alíquota, variação vs FCI vigente e obrigatoriedade da FCI. <span class="ac"><b>Aceite:</b> o relatório identifica cenário, ciclo, versão, autor, status, base de cálculo e câmbio adotado.</span></td></tr>
+      <tr><td class="id">RF-088</td><td class="nome">Direcionamentos</td><td>Apresentar direcionamentos para decisão segmentados por área. <span class="ac"><b>Aceite:</b> constam blocos para Compras, Pricing e Fiscal/Tributário.</span></td></tr>
+      <tr><td class="id">RF-089</td><td class="nome">Exportação</td><td>Permitir a exportação do relatório em formato PDF preservando a identificação do cenário e da versão. <span class="ac"><b>Aceite:</b> o arquivo gerado mantém cabeçalho e rodapé de identificação em todas as páginas.</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.13 Dados mestres, integrações e parâmetros</h3>
+  <table>
+    <thead><tr><th style="width:9%;">ID</th><th style="width:21%;">REQUISITO</th><th>DESCRIÇÃO E CRITÉRIO DE ACEITE</th></tr></thead>
+    <tbody>
+      <tr><td class="id">RF-090</td><td class="nome">Configuração da fonte</td><td>Disponibilizar área de configuração da fonte de dados de cada integração com bancos externos, contemplando host ou endpoint, porta, base, usuário e credencial. <span class="ac"><b>Aceite:</b> todos os campos de conexão são editáveis e a credencial não é exibida em texto claro.</span></td></tr>
+      <tr><td class="id">RF-091</td><td class="nome">Mapeamento de dados</td><td>Registrar o mapeamento de cada variável do simulador para tabela e campo da fonte de origem. <span class="ac"><b>Aceite:</b> cada integração relaciona as variáveis atendidas com a respectiva tabela e campo.</span></td></tr>
+      <tr><td class="id">RF-092</td><td class="nome">Teste de conexão</td><td>Permitir o teste da conexão configurada, com retorno do resultado. <span class="ac"><b>Aceite:</b> o teste altera o status apresentado e registra o momento da verificação.</span></td></tr>
+      <tr><td class="id">RF-093</td><td class="nome">Sincronização</td><td>Permitir a sincronização manual e apresentar a frequência de sincronização programada. <span class="ac"><b>Aceite:</b> a sincronização manual é acionável e a frequência é visível por integração.</span></td></tr>
+      <tr><td class="id">RF-094</td><td class="nome">Status da integração</td><td>Apresentar o status de cada integração e a data e hora da última sincronização. <span class="ac"><b>Aceite:</b> os estados conectado, sincronizando e erro são distinguíveis.</span></td></tr>
+      <tr><td class="id">RF-095</td><td class="nome">Falha de integração</td><td>Sinalizar falha de conexão sem interromper a operação do simulador sobre os dados já carregados. <span class="ac"><b>Aceite:</b> integração em erro é destacada e o cenário permanece operável.</span></td></tr>
+      <tr><td class="id">RF-096</td><td class="nome">Parâmetros do motor</td><td>Permitir a manutenção dos parâmetros de apuração — classificações fiscais, CFOP de saída interestadual, saída interna e transferência, NF de complemento e processamento. <span class="ac"><b>Aceite:</b> os parâmetros MV_FCI correspondentes são editáveis e persistidos.</span></td></tr>
+      <tr><td class="id">RF-097</td><td class="nome">Alíquotas</td><td>Permitir a manutenção da relação de alíquotas de ICMS aceitas pelo motor. <span class="ac"><b>Aceite:</b> é possível incluir, alterar e excluir alíquotas da relação.</span></td></tr>
+      <tr><td class="id">RF-098</td><td class="nome">Faixas e fatores</td><td>Apresentar as faixas legais com o fator de cascata e a alíquota associada a cada uma. <span class="ac"><b>Aceite:</b> as três faixas são exibidas com limite, fator e alíquota.</span></td></tr>
+      <tr><td class="id">RF-099</td><td class="nome">Gatilho de reemissão</td><td>Permitir a parametrização do gatilho de reemissão da FCI em pontos percentuais. <span class="ac"><b>Aceite:</b> a alteração do gatilho altera imediatamente os alertas gerados.</span></td></tr>
+      <tr><td class="id">RF-100</td><td class="nome">Restrição de administração</td><td>Restringir a edição de integrações e parâmetros mestres ao perfil administrador. <span class="ac"><b>Aceite:</b> perfis não administradores acessam em modo consulta, com indicação da restrição.</span></td></tr>
+    </tbody>
+  </table>
+
+  <h2>7 · Regras de negócio</h2>
+  <table>
+    <thead><tr><th style="width:9%;">ID</th><th>REGRA</th></tr></thead>
+    <tbody>
+      <tr><td class="id">RN-01</td><td>CI% = parcela importada ÷ denominador × 100, conforme Convênio ICMS 38/2013.</td></tr>
+      <tr><td class="id">RN-02</td><td>Denominador padrão do simulador: média ponderada global das saídas interestaduais (volume × preço por destino), líquida de ICMS, IPI e ST.</td></tr>
+      <tr><td class="id">RN-03</td><td>Custo FCI do insumo = valor total de entrada − ICMS − IPI. PIS e COFINS não deduzem.</td></tr>
+      <tr><td class="id">RN-04</td><td>Insumo importado diretamente e item estrangeiro adquirido no mercado interno são considerados com conteúdo importado integral.</td></tr>
+      <tr><td class="id">RN-05</td><td>Fatores de faixa na cascata: CI ≤ 40% → fator 0; 40% &lt; CI ≤ 70% → fator 0,5; CI &gt; 70% → fator 1.</td></tr>
+      <tr><td class="id">RN-06</td><td>Enquadramento: CI% = 0% → 100% nacional, FCI não obrigatória; 0% &lt; CI% ≤ 40% → nacional com conteúdo de importação; 40% &lt; CI% ≤ 70% → nacional com CI acima de 40%; CI% &gt; 70% → equiparado a importado.</td></tr>
+      <tr><td class="id">RN-07</td><td>CI% acima de 40% implica alíquota interestadual de 4%, nos termos da Resolução SF 13/2012.</td></tr>
+      <tr><td class="id">RN-08</td><td>Reemissão da FCI é exigida quando o CI% variar além do gatilho parametrizado, por padrão 5 pontos percentuais, em relação à ficha vigente.</td></tr>
+      <tr><td class="id">RN-09</td><td>A soma das proporções entre alternativas de um mesmo componente deve ser exatamente 100%, e a soma das quantidades deve igualar a quantidade original da receita.</td></tr>
+      <tr><td class="id">RN-10</td><td>Premissas congeladas não são editáveis; qualquer alteração posterior constitui nova versão do cenário.</td></tr>
+      <tr><td class="id">RN-11</td><td>Alteração de rendimento, produtividade ou índice técnico da receita exige validação da área de estrutura antes da consolidação.</td></tr>
+      <tr><td class="id">RN-12</td><td>O simulador não transmite informação a órgão fiscal e não substitui a FCI oficial.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>8 · Requisitos não funcionais</h2>
+  <table>
+    <thead><tr><th style="width:9%;">ID</th><th style="width:24%;">CATEGORIA</th><th>REQUISITO</th></tr></thead>
+    <tbody>
+      <tr><td class="id">RNF-01</td><td class="nome">Desempenho</td><td>O recálculo do CI% após alteração de premissa deve ser percebido como imediato pelo usuário.</td></tr>
+      <tr><td class="id">RNF-02</td><td class="nome">Usabilidade</td><td>Interface desktop densa, orientada a ferramenta interna, com informação de apoio à decisão visível sem navegação adicional.</td></tr>
+      <tr><td class="id">RNF-03</td><td class="nome">Idioma</td><td>Interface e mensagens em português do Brasil, com terminologia fiscal e industrial da companhia.</td></tr>
+      <tr><td class="id">RNF-04</td><td class="nome">Rastreabilidade</td><td>Toda alteração relevante deve ser atribuível a autor, data e versão de cenário.</td></tr>
+      <tr><td class="id">RNF-05</td><td class="nome">Segurança</td><td>Credenciais de integração não devem ser exibidas em texto claro; edição restrita ao perfil administrador.</td></tr>
+      <tr><td class="id">RNF-06</td><td class="nome">Integridade</td><td>Nenhuma operação do simulador deve alterar dados de sistemas de origem.</td></tr>
+      <tr><td class="id">RNF-07</td><td class="nome">Disponibilidade dos dados</td><td>Falha de integração não deve impedir a operação sobre os dados já carregados no cenário.</td></tr>
+      <tr><td class="id">RNF-08</td><td class="nome">Auditabilidade</td><td>A memória de cálculo deve ser demonstrável até o nível do insumo.</td></tr>
+      <tr><td class="id">RNF-09</td><td class="nome">Governança de acesso</td><td>Permissões atribuídas por área e perfil, com efeito imediato sobre os campos editáveis.</td></tr>
+      <tr><td class="id">RNF-10</td><td class="nome">Conformidade</td><td>Regras de cálculo e enquadramento aderentes à legislação citada, com versionamento da fórmula.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>9 · Rastreabilidade das variáveis do processo</h2>
+  <p style="font-size:9pt;">Correlação entre as variáveis mapeadas na matriz do processo, sua fonte principal e os requisitos que as atendem.</p>
+  <table>
+    <thead><tr><th style="width:5%;">Nº</th><th style="width:31%;">VARIÁVEL</th><th style="width:30%;">FONTE PRINCIPAL</th><th>REQUISITOS</th></tr></thead>
+    <tbody>
+      <tr><td class="id">1</td><td>Movimento de entrada (baseline)</td><td>ERP Protheus · histórico de entrada</td><td class="id">RF-002 · RF-090</td></tr>
+      <tr><td class="id">2</td><td>Vínculo insumo-produto-fornecedor</td><td>Estrutura e histórico</td><td class="id">RF-010 · RF-013</td></tr>
+      <tr><td class="id">3</td><td>Produto acabado / lista técnica</td><td>SGI/CGI · PCP</td><td class="id">RF-010 · RF-011 · RF-026</td></tr>
+      <tr><td class="id">4</td><td>Origem e classificação do item</td><td>Fiscal · classificação do ERP</td><td class="id">RF-046 · RF-047 · RF-050</td></tr>
+      <tr><td class="id">5</td><td>Preço de entrada / valor monetário</td><td>Portal de Custos · Compras</td><td class="id">RF-058 · RF-059 · RF-068</td></tr>
+      <tr><td class="id">6</td><td>Câmbio</td><td>Financeiro · BACEN PTAX</td><td class="id">RF-052 · RF-053 · RF-054</td></tr>
+      <tr><td class="id">7</td><td>Fornecedor</td><td>Compras · contratos</td><td class="id">RF-020 · RF-055</td></tr>
+      <tr><td class="id">8</td><td>Preço de saída</td><td>Pricing · premissa</td><td class="id">RF-066 · RF-067 · RF-071</td></tr>
+      <tr><td class="id">9</td><td>UF de destino</td><td>Pricing · premissa</td><td class="id">RF-066 · RF-069 · RF-070</td></tr>
+      <tr><td class="id">10</td><td>Faixa de conteúdo por aquisição nacional</td><td>Documento anexo da FCI</td><td class="id">RF-048 · RF-098</td></tr>
+      <tr><td class="id">11</td><td>Janela temporal da apuração</td><td>Documento anexo da FCI</td><td class="id">RF-001 · RF-087</td></tr>
+      <tr><td class="id">12</td><td>Alíquotas de ICMS</td><td>Parâmetros do ERP</td><td class="id">RF-061 · RF-097</td></tr>
+      <tr><td class="id">13</td><td>Cálculo de CST da lata</td><td>Pricing · Fiscal</td><td class="id">RF-048 · RF-050</td></tr>
+      <tr><td class="id">14</td><td>Gatilho de reemissão</td><td>Regra fiscal</td><td class="id">RF-084 · RF-099</td></tr>
+      <tr><td class="id">15</td><td>Versão da fórmula do CI%</td><td>Sistema · governança</td><td class="id">RF-056</td></tr>
+      <tr><td class="id">16</td><td>Status de validade do cenário</td><td>Sistema · governança</td><td class="id">RF-005 · RF-006 · RF-008</td></tr>
+      <tr><td class="id">17</td><td>Comparação entre cenários</td><td>Sistema · simulador</td><td class="id">RF-073 a RF-082</td></tr>
+    </tbody>
+  </table>
+
+  <h2>10 · Premissas e restrições</h2>
+  <ul>
+    <li>Todas as fontes de dados serão informadas por meio de integrações; a digitação manual é recurso de simulação, não de carga.</li>
+    <li>Os dados mestres possuem área própria de configuração da fonte de dados das integrações com bancos externos.</li>
+    <li>Todas as variáveis do simulador e todas as estruturas de dados são alteráveis para fins de simulação, sempre isoladas por cenário.</li>
+    <li>O resultado final do CI% não é segmentado por UF; a visão por estado tem finalidade analítica.</li>
+    <li>A aprovação de alterações de receita depende da área de estrutura, conforme a governança vigente.</li>
+  </ul>
+
+  <h2>11 · Aprovação</h2>
+  <p>A assinatura abaixo declara que os requisitos especificados neste documento refletem a necessidade da área e autorizam a construção da solução conforme especificado.</p>
+  <table class="kept" style="margin-top:6px;">
+    <thead><tr><th style="width:30%;">ÁREA / PAPEL</th><th style="width:26%;">NOME</th><th style="width:26%;">ASSINATURA</th><th>DATA</th></tr></thead>
+    <tbody>
+      <tr><td class="nome" style="height:34px;">Custos — requerente</td><td></td><td></td><td></td></tr>
+      <tr><td class="nome" style="height:34px;">Controladoria — validador</td><td></td><td></td><td></td></tr>
+      <tr><td class="nome" style="height:34px;">Fiscal / Tributário</td><td></td><td></td><td></td></tr>
+      <tr><td class="nome" style="height:34px;">Pricing</td><td></td><td></td><td></td></tr>
+      <tr><td class="nome" style="height:34px;">Compras</td><td></td><td></td><td></td></tr>
+      <tr><td class="nome" style="height:34px;">Industrial / PCP — estrutura</td><td></td><td></td><td></td></tr>
+      <tr><td class="nome" style="height:34px;">TI — integrações</td><td></td><td></td><td></td></tr>
+    </tbody>
+  </table>
+
+  <div class="kept" style="margin-top:16px;padding:12px 15px;border:1px solid #e3cfa4;border-left:3px solid #B38335;border-radius:7px;background:#f4ecdd;">
+    <div style="font-size:7.5pt;font-weight:700;letter-spacing:.6px;color:#6d5320;">RESSALVA</div>
+    <p style="font-size:9pt;line-height:1.55;color:#6d5320;margin:5px 0 0;">O Simulador de FCI é ambiente de simulação gerencial, sem validade fiscal. Não substitui a Ficha de Conteúdo de Importação oficial, não gera transmissão a órgão fiscal e não constitui apuração tributária. Os resultados apoiam decisões de custo, preço e suprimentos, sujeitos à validação do time tributário.</p>
+  </div>
+
+</doc-page>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){ this._remeasure(); }
+  componentDidUpdate(){ this._remeasure(); }
+  _remeasure(){
+    const run=()=>{ const dp=document.querySelector('doc-page'); if(dp&&dp._measure) dp._measure(); };
+    requestAnimationFrame(run);
+    setTimeout(run,120);
+    if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>setTimeout(run,60));
+  }
+  renderVals(){ return {}; }
+}
+</script>
+</body>
+</html>

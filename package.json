@@ -1,0 +1,31 @@
+{
+  "name": "simulador-fci",
+  "version": "0.1.0",
+  "description": "Simulador FCI — Cervejaria Cidade Imperial. Entrega Semana 1 (14/09–18/09): fundação de dados, parâmetros e cenário.",
+  "private": true,
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "migrate": "node scripts/migrate.js",
+    "seed": "node scripts/seed.js",
+    "setup": "npm run migrate && npm run seed",
+    "test": "node --test test/smoke.test.js"
+  },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "node-cron": "^3.0.3",
+    "pg": "^8.12.0"
+  },
+  "optionalDependencies": {
+    "mssql": "^10.0.2",
+    "mysql2": "^3.10.0",
+    "oracledb": "^6.5.1"
+  }
+}
