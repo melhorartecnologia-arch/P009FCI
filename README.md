@@ -65,8 +65,12 @@ sudo bash scripts/install-vps.sh
 
 O script instala Node 20 + PostgreSQL, cria papel/base `fci_app`/`fci_simulador`,
 gera o `.env` com segredos, aplica migrações + seed e registra o serviço
-systemd `fci-simulador`. Passo a passo manual e proxy Nginx/HTTPS em
-[`docs/DEPLOY_VPS.md`](docs/DEPLOY_VPS.md).
+systemd `fci-simulador`. **Nada é compilado** — Node por pacote binário,
+frontend sem build e dependências npm puras/pré-compiladas.
+
+- **AWS Lightsail** (passo a passo completo: instância, IP estático,
+  firewall, Nginx, HTTPS): [`docs/DEPLOY_LIGHTSAIL.md`](docs/DEPLOY_LIGHTSAIL.md)
+- EC2 / VPS genérica e conexão às origens reais: [`docs/DEPLOY_VPS.md`](docs/DEPLOY_VPS.md)
 
 ## Integrações configuráveis (RF-090/RF-091)
 

@@ -23,6 +23,8 @@ echo "== Simulador FCI · instalação na VPS =="
 # ----------------------------------------------------------------------------
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -y
+# utilitários básicos (imagens mínimas do Lightsail podem não trazer todos)
+apt-get install -y git curl rsync openssl ca-certificates
 if ! command -v psql >/dev/null; then
   apt-get install -y postgresql postgresql-contrib
 fi
