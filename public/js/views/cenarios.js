@@ -15,7 +15,7 @@
  * Os indicadores chegam calculados pelo servidor a partir do motor único
  * (RNF-10): a tela não recalcula CI%, apenas apresenta e compara.
  */
-import { esc, num, pct, dataHora } from '../format.js';
+import { esc, num, pct, dataHora, rotuloEvento, resumoEvento, requisitoEvento } from '../format.js';
 
 const ST = {
   rascunho:    { label: 'Rascunho',    bg: '#efeae0', fg: '#8b8681', dot: '#8b8681' },
@@ -592,14 +592,18 @@ async function painelHistorico(id, ctx) {
       <div class="painel-secao">
         <header>EVENTOS REGISTRADOS (RF-006 · RNF-04) · ${eventos.length}</header>
         <div class="conteudo" style="gap:0;">
-          ${eventos.length ? eventos.map((e) => `
+          ${eventos.length ? eventos.map((e) => {
+            const resumo = resumoEvento(e.tipo, e.detalhe);
+            const req = requisitoEvento(e.detalhe);
+            return `
             <div class="timeline-item" style="flex-direction:column;gap:2px;">
-              <div style="font-size:11.5px;font-weight:600;">${esc(e.acao)}</div>
-              <div style="font-size:11px;color:var(--ink-2);line-height:1.5;">${esc(e.detalhe || '')}</div>
+              <div style="font-size:11.5px;font-weight:600;">${esc(rotuloEvento(e.tipo, e.detalhe))}</div>
+              ${resumo ? `<div style="font-size:11px;color:var(--ink-2);line-height:1.5;">${esc(resumo)}</div>` : ''}
               <div class="texto-mini">
-                ${esc(e.autor_nome || 'sistema')}${e.autor_area ? ` · ${esc(e.autor_area)}` : ''} · ${dataHora(e.criado_em)}
+                ${esc(e.usuario_nome || 'sistema')} · ${dataHora(e.registrado_em)}${req ? ` · ${esc(req)}` : ''}
               </div>
-            </div>`).join('') : '<div class="texto-mini">Nenhum evento registrado.</div>'}
+            </div>`;
+          }).join('') : '<div class="texto-mini">Nenhum evento registrado.</div>'}
         </div>
       </div>
 

@@ -14,7 +14,7 @@
  *
  * Toda regra de negócio vem do motor compartilhado; a tela orquestra e explica.
  */
-import { esc, dataHora } from '../format.js';
+import { esc, dataHora, rotuloEvento, resumoEvento, requisitoEvento } from '../format.js';
 import * as E from '/shared/engine.mjs';
 
 /* ---------------------------------------------------------------- estado */
@@ -2468,8 +2468,17 @@ function abaGovernanca(S, host) {
 
   /* ---- direcionamentos por área (RF-009) */
   (async () => {
-    const { r: resp } = await lerApi(S, `/cenarios/${S.id}/gov/direcionamentos`, () => ({ direcionamentos: [] }));
-    const lista = Array.isArray(resp) ? resp : (resp.direcionamentos || []);
+    // A rota devolve { manuais, automaticos, areas, base, alertas }: os manuais
+    // vêm da tabela e os automáticos chegam agrupados por área, em blocos com
+    // `itens` (RF-009 · RF-088).
+    const { r: resp } = await lerApi(S, `/cenarios/${S.id}/gov/direcionamentos`, () => ({ manuais: [], automaticos: [] }));
+    const manuais = (resp.manuais || []).map((d) => ({
+      area: d.area, prioridade: d.prioridade, texto: d.texto, produto: d.produto,
+      autor: d.criado_nome, em: d.criado_em, origem: 'manual',
+    }));
+    const automaticos = (resp.automaticos || []).flatMap((b) =>
+      (b.itens || []).map((i) => ({ ...i, area: b.area, origem: i.origem || 'automatico' })));
+    const lista = [...manuais, ...automaticos];
     const alvo = host.querySelector('#gov-direcionamentos');
     if (!alvo) return;
     alvo.innerHTML = lista.length ? lista.map((d) => `
@@ -2479,9 +2488,13 @@ function abaGovernanca(S, host) {
           <div class="linha-flex" style="gap:7px;">
             ${chip(d.area || '—', 'var(--gold-soft)', '#6d5320')}
             ${d.prioridade ? `<span class="prio ${esc(String(d.prioridade).toLowerCase())}">${esc(String(d.prioridade).toUpperCase())}</span>` : ''}
-            <span class="texto-mini">${esc(dataHora(d.criado_em || d.criadoEm))}${d.autor ? ` · ${esc(d.autor)}` : ''}</span>
+            ${d.origem === 'manual'
+              ? chip('manual', 'var(--line-2)', 'var(--ink-3)', 'Registrado por um usuário (RF-009)')
+              : chip('do motor', 'var(--line-2)', 'var(--ink-3)', 'Derivado do resultado e dos alertas (RF-088)')}
+            ${d.produto ? `<span class="texto-mini">${esc(d.produto)}</span>` : ''}
+            ${d.em ? `<span class="texto-mini">${esc(dataHora(d.em))}${d.autor ? ` · ${esc(d.autor)}` : ''}</span>` : ''}
           </div>
-          <div style="margin-top:3px;">${esc(d.texto || d.direcionamento || '')}</div>
+          <div style="margin-top:3px;">${esc(d.texto || '')}</div>
         </div>
       </div>`).join('')
       : vazio('Nenhum direcionamento registrado. Os direcionamentos acompanham o relatório executivo (RF-088).');
@@ -2493,29 +2506,24 @@ function abaGovernanca(S, host) {
     const lista = Array.isArray(resp) ? resp : (resp.eventos || []);
     const alvo = host.querySelector('#gov-eventos');
     if (!alvo) return;
-    alvo.innerHTML = lista.length ? lista.map((ev) => `
+    // Contrato de `cenario_eventos`: { usuario_nome, tipo, detalhe (JSONB),
+    // registrado_em }. O `detalhe` é estruturado — passa pelo resumidor
+    // compartilhado em vez de ser interpolado como texto.
+    alvo.innerHTML = lista.length ? lista.map((ev) => {
+      const req = requisitoEvento(ev.detalhe);
+      const resumo = resumoEvento(ev.tipo, ev.detalhe);
+      return `
       <div class="timeline-item">
-        <div class="quando">${esc(dataHora(ev.criado_em || ev.criadoEm || ev.data))}</div>
+        <div class="quando">${esc(dataHora(ev.registrado_em))}</div>
         <div style="flex:1;">
-          <div style="font-size:12px;"><b>${esc(rotuloEvento(ev.tipo || ev.evento))}</b>
-            ${ev.versao != null ? chip(`v${ev.versao}`, 'var(--line-2)', 'var(--ink-3)', 'Versão do cenário (RF-006)') : ''}</div>
-          <div class="texto-mini">${esc(ev.resumo || ev.descricao || '—')}${ev.usuario || ev.autor ? ` · ${esc(ev.usuario || ev.autor)}` : ''}${ev.area ? ` · ${esc(ev.area)}` : ''}</div>
+          <div style="font-size:12px;"><b>${esc(rotuloEvento(ev.tipo, ev.detalhe))}</b>
+            ${req ? chip(req, 'var(--line-2)', 'var(--ink-3)', 'Requisito registrado na trilha (RNF-04)') : ''}</div>
+          <div class="texto-mini">${resumo ? esc(resumo) : '—'}${ev.usuario_nome ? ` · ${esc(ev.usuario_nome)}` : ''}</div>
         </div>
-      </div>`).join('')
+      </div>`;
+    }).join('')
       : vazio('Nenhum evento registrado para este cenário.');
   })();
-}
-
-function rotuloEvento(tipo) {
-  const mapa = {
-    criado: 'Cenário criado', duplicado: 'Nova versão criada', recarregado: 'Estrutura recarregada da integração',
-    salvo: 'Premissas salvas', substituicao: 'Substituição de componente', massa: 'Alteração em massa aplicada',
-    qtd: 'Quantidade da receita alterada', overhead: 'Custo industrial alterado', insumo: 'Cadastro do cenário alterado',
-    cambio: 'Premissa cambial alterada', saidas: 'Volumes e preços alterados', base: 'Base do denominador alterada',
-    modo: 'Modo de edição alterado', validacao: 'Validação técnica', congelado: 'Premissas congeladas',
-    consolidado: 'Cenário consolidado', direcionamento: 'Direcionamento registrado',
-  };
-  return mapa[tipo] || (tipo ? String(tipo) : 'Evento do cenário');
 }
 
 /** Direcionamento por área responsável (RF-009 · RF-088). */

@@ -74,7 +74,17 @@ export function fecharPainel() {
 }
 
 /* ------------------------------------------------------------- navegação */
-function navegar(hash) { window.location.hash = hash; }
+/**
+ * Atribuir ao hash o valor que ele já tem não dispara `hashchange` — e esse
+ * evento é o único gatilho de re-renderização. Sem o desvio abaixo, entrar pela
+ * raiz da aplicação (onde o bootstrap já fixa «#/cenarios») e autenticar
+ * deixaria o usuário parado no formulário de login, com a sessão gravada e sem
+ * mensagem de erro, até recarregar a página.
+ */
+function navegar(hash) {
+  if ((window.location.hash || '') === hash) renderizar();
+  else window.location.hash = hash;
+}
 
 function shell(usuario, navAtiva, alertCount) {
   const admin = usuario.is_admin;
