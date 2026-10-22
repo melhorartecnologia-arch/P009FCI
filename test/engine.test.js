@@ -725,3 +725,77 @@ test('RF-025 — quantidade zero ou negativa bloqueia mesmo no modo avançado', 
   assert.ok(diag.erros.some((v) => v.tipo === 'quantidade_invalida'));
   assert.strictEqual(diag.bloqueado, true);
 });
+
+/* ------------------------- grupo obrigatório × proporção do mix (RF-026/027) */
+
+test('RF-026 — substituição integral por outro grupo não mascara o grupo obrigatório ausente', () => {
+  const d = cenario();
+  // MP-CI (grupo «Embalagem», obrigatório 1 un) é trocado integralmente por
+  // MP-NAC (grupo «Grao»). A substituição integral preserva o original no mix
+  // com pct 0 (RF-016 · RF-019) — esse resíduo não pode valer como presença.
+  const sub = E.aplicarSubstituicao(d, 'PA-TESTE', 1, { refSubstituto: 'MP-NAC', modo: 'integral' });
+  const mix = sub.produtos.find((p) => p.id === 'PA-TESTE').componentes[1].mix;
+  assert.strictEqual(mix.find((m) => m.ref === 'MP-CI').pct, 0, 'o original permanece no mix em 0%');
+
+  for (const modo of ['padrao', 'avancado']) {
+    const diag = E.diagnostico(sub, { modo });
+    const ausente = diag.erros.find((v) => v.tipo === 'obrigatorio' && /Embalagem/.test(v.msg));
+    assert.ok(ausente, `grupo obrigatório sem nenhuma proporção efetiva deve acusar ausência (modo ${modo})`);
+    assert.strictEqual(diag.bloqueado, true, `estrutura incompleta nunca é consolidável (modo ${modo})`);
+  }
+});
+
+test('RF-027 — a quantidade do grupo é ponderada pela proporção de cada alternativa', () => {
+  const d = cenario();
+  const pa = d.produtos.find((p) => p.id === 'PA-TESTE');
+  // Além da embalagem, o PA passa a exigir 1 kg do grupo «Grao» por uma posição
+  // própria, para conferir os dois lados da troca na mesma validação.
+  // Os dois grupos são medidos na MESMA unidade, para isolar a ponderação pela
+  // proporção da conferência de unidade (coberta no teste seguinte).
+  d.insumos.find((i) => i.id === 'MP-NAC').unidade = 'un';
+  pa.obrig = [
+    { grupo: 'Embalagem', qtd: 1, unidade: 'un', tol: 0 },
+    { grupo: 'Grao', qtd: 1, unidade: 'un', tol: 0 },
+  ];
+  pa.componentes = [
+    { ref: 'MP-CI', qtd: 1, qtdPadrao: 1, unidade: 'un' },
+    { ref: 'MP-NAC', qtd: 1, qtdPadrao: 1, unidade: 'un' },
+  ];
+  // 50% da posição da embalagem passa para a alternativa do mesmo grupo:
+  // Embalagem continua somando 1 un (0,5 + 0,5) e não deve acusar nada.
+  const mesmoGrupo = E.aplicarSubstituicao(d, 'PA-TESTE', 0, { refSubstituto: 'MP-CI-NAC', modo: 'parcial', pct: 50 });
+  const semAchado = E.validar(mesmoGrupo).filter((v) => v.tipo === 'quantidade' && /Embalagem/.test(v.msg));
+  assert.strictEqual(semAchado.length, 0, 'troca dentro do mesmo grupo preserva a quantidade do grupo');
+
+  // 50% da posição da embalagem passa para MP-NAC, de OUTRO grupo:
+  // Embalagem cai a 0,5 un (erro) e Grao sobe a 1,5 kg (erro, com o número real).
+  const outroGrupo = E.aplicarSubstituicao(d, 'PA-TESTE', 0, { refSubstituto: 'MP-NAC', modo: 'parcial', pct: 50 });
+  const achados = E.validar(outroGrupo).filter((v) => v.tipo === 'quantidade');
+
+  const emb = achados.find((v) => /Embalagem/.test(v.msg));
+  assert.ok(emb, 'o grupo que cedeu proporção precisa ser conferido');
+  assert.match(emb.msg, /abaixo/);
+  assert.match(emb.msg, /informado 0,500/);
+
+  const grao = achados.find((v) => /Grao/.test(v.msg));
+  assert.ok(grao, 'o grupo que recebeu proporção precisa ser conferido');
+  assert.match(grao.msg, /acima/);
+  assert.match(grao.msg, /informado 1,500/, 'a quantidade informada é a real, não a da posição inteira');
+});
+
+test('RF-026 · RF-027 — quantidades de unidades distintas não são somadas no mesmo grupo', () => {
+  const d = cenario();
+  const pa = d.produtos.find((p) => p.id === 'PA-TESTE');
+  pa.obrig = [{ grupo: 'Grao', qtd: 1, unidade: 'kg', tol: 0 }];
+  pa.componentes = [
+    { ref: 'MP-NAC', qtd: 1, qtdPadrao: 1, unidade: 'kg' },
+    { ref: 'MP-IMP', qtd: 3, qtdPadrao: 3, unidade: 'un' },   // mesmo grupo, outra unidade
+  ];
+  const itens = E.validar(d);
+  const unidade = itens.find((v) => v.tipo === 'unidade');
+  assert.ok(unidade, 'a incompatibilidade de unidade é declarada');
+  assert.match(unidade.msg, /kg/);
+  assert.match(unidade.msg, /unidades incompat/i);
+  // a posição em «un» não entra na soma: o grupo fecha 1 kg e não acusa quantidade
+  assert.strictEqual(itens.filter((v) => v.tipo === 'quantidade' && /Grao/.test(v.msg)).length, 0);
+});

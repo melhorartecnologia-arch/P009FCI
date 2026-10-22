@@ -3,7 +3,17 @@
  * imagens usadas no manual do usuário.
  * Uso: node e2e.js [--shots pasta] [--perfil email]
  */
-const { chromium } = require('playwright-core');
+// playwright-core não é dependência da aplicação: é ferramenta de verificação.
+// Instale com `npm install --no-save playwright-core` (o Chromium pode vir do
+// sistema, apontado por FCI_CHROMIUM) antes de rodar este percurso.
+let chromium;
+try {
+  ({ chromium } = require('playwright-core'));
+} catch {
+  console.error('Percurso end-to-end indisponível: playwright-core não está instalado.');
+  console.error('Instale com:  npm install --no-save playwright-core');
+  process.exit(2);
+}
 const fs = require('fs');
 const path = require('path');
 
@@ -48,7 +58,7 @@ async function irPara(page, hash, seletor) {
 }
 
 (async () => {
-  const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', headless: true });
+  const browser = await chromium.launch({ executablePath: process.env.FCI_CHROMIUM || '/opt/pw-browsers/chromium', headless: true });
   const page = await browser.newPage({ viewport: { width: 1480, height: 950 } });
   page.on('pageerror', (e) => erros.push('pageerror: ' + e.message));
   page.on('console', (m) => {

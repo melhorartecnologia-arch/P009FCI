@@ -1045,11 +1045,39 @@ export function validar(data, opcoes = {}) {
 
     // RF-026 / RF-027 — componentes obrigatórios e quantidade por grupo
     for (const o of p.obrig || []) {
+      // A quantidade do grupo é a soma PONDERADA pela proporção de cada
+      // alternativa: a substituição integral preserva o item original no mix
+      // com pct 0 (RF-016 · RF-019), e contar a quantidade integral da posição
+      // por esse resíduo daria o grupo por presente quando ele já não existe
+      // fisicamente na ficha — e creditaria ao grupo que recebeu a proporção
+      // uma quantidade maior que a real.
       let soma = 0, achou = false, idxRef = null;
+      const unidadesDivergentes = new Set();
+      const unidadeEsperada = String(o.unidade || '').trim().toLowerCase();
       (p.componentes || []).forEach((c, idx) => {
-        const pertence = mixOf(c).some((m) => grupoDe(data, m.ref) === o.grupo);
-        if (pertence) { achou = true; soma += n(c.qtd); if (idxRef == null) idxRef = idx; }
+        const unidadeComp = String(c.unidade || '').trim().toLowerCase();
+        for (const m of mixOf(c)) {
+          if (grupoDe(data, m.ref) !== o.grupo) continue;
+          const efetiva = n(c.qtd) * n(m.pct) / 100;
+          if (efetiva <= EPS) continue;             // resíduo em 0% não é presença
+          // Somar quantidades de unidades distintas produziria um total sem
+          // significado físico (1 un + 0,005 kg): a divergência é reportada em
+          // vez de silenciada.
+          if (unidadeEsperada && unidadeComp && unidadeComp !== unidadeEsperada) {
+            unidadesDivergentes.add(`${nomeDe(data, m.ref)} (${c.unidade})`);
+            continue;
+          }
+          achou = true;
+          soma += efetiva;
+          if (idxRef == null) idxRef = idx;
+        }
       });
+      if (unidadesDivergentes.size) {
+        add({
+          tipo: 'unidade', prodId: p.id, idx: idxRef, campo: 'obrig',
+          msg: `${rotuloProd}: o grupo obrigatório «${o.grupo}» é medido em ${o.unidade}, mas a receita o atende com ${[...unidadesDivergentes].join(' · ')} — unidades incompatíveis não podem ser somadas. Revise a substituição.`,
+        });
+      }
       if (!achou) {
         add({
           tipo: 'obrigatorio', prodId: p.id, campo: 'obrig',
