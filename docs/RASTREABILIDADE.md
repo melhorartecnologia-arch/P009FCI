@@ -11,6 +11,12 @@ Legenda das colunas:
 - **Tela** — onde o usuário exerce o requisito.
 - **Teste** — `E` = `test/engine.test.js` · `A` = `test/api.test.js` · `S` = `test/smoke.test.js`.
 
+Além dos 103 testes automatizados, `test/e2e.js` percorre as 18 telas em
+Chromium e falha se houver erro de console, HTTP 5xx ou se a autenticação não
+montar a casca da aplicação. Ele entra pela **raiz** do endereço, não por
+`#/login`: entrar pelo atalho mascarava o defeito de rota pós-autenticação
+descrito abaixo.
+
 ## 6.1 Gestão de cenários e governança (RC-001 · RC-002 · RC-010 · RC-014)
 
 | RF | Requisito | Motor | Servidor | Tela | Teste |
@@ -207,3 +213,19 @@ Legenda das colunas:
 | RNF-08 | Auditabilidade | `memoriaCalculo` e `memoriaCustoFCI` demonstram o cálculo até o insumo |
 | RNF-09 | Governança de acesso | Matriz de permissões por área e perfil, com efeito imediato nos campos |
 | RNF-10 | Conformidade | Motor único compartilhado entre tela e servidor; versão da fórmula registrada no cenário |
+
+## Defeitos encontrados na auditoria dos requisitos
+
+Auditoria adversarial requisito a requisito contra a aplicação em execução.
+Cada achado foi reproduzido antes da correção e verificado depois.
+
+| Requisito | Defeito | Efeito para o usuário |
+| --- | --- | --- |
+| RF-004 | `navegar()` atribuía ao hash o valor que ele já tinha, e isso não dispara `hashchange` | Entrar pela raiz do endereço autenticava mas não trocava de tela: o usuário ficava no formulário, sem erro, até recarregar |
+| RF-006 | As duas telas liam `acao`/`autor_nome`/`criado_em`; a API devolve `tipo`/`usuario_nome`/`registrado_em` com `detalhe` em JSONB | Trilha de auditoria exibindo «[object Object]», autor «sistema» e data «—» em todos os eventos |
+| RF-009 | A Governança lia `resp.direcionamentos`, chave inexistente no payload | O direcionamento era gravado, a confirmação aparecia, e a lista logo abaixo seguia vazia |
+| RF-026 · RF-027 | A quantidade do grupo obrigatório somava a posição inteira, ignorando a proporção do mix | Produto sem componente obrigatório passava com zero erros e podia ser consolidado; troca parcial não conferia o grupo que cedeu proporção e reportava número errado no que recebeu |
+| RF-038 | A tela decidia por `validacao_aprovada`, campo que não existe em lugar nenhum | O botão «Consolidar» travava para sempre após qualquer alteração de receita, inclusive depois de aprovada — o ciclo de governança não fechava pela interface |
+| RF-055 | O modal enviava `refBase`/`ref` e a rota lia `base`; os campos aduaneiros, o fornecedor e a cotação eram descartados em silêncio | «Incluir alternativa cadastral» sempre falhava com 422; corrigido o envio, a alternativa ainda nascia com os custos do item base e sem o fornecedor informado |
+| RF-060 | `listarCenarios()` não selecionava `base_calculo` | O selo «base: custo» nunca aparecia no cartão do cenário |
+| RF-073 · RF-078 | Ids de cenário do `dataset` (texto) comparados por `===` com os da API (inteiros) | Retirar cenário da seleção, focar coluna e abrir o painel não surtiam efeito, sem erro visível |

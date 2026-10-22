@@ -60,7 +60,7 @@ cp .env.example .env          # preencha PG* e gere FCI_SECRET_KEY / FCI_JWT_SEC
 npm install
 npm run setup                 # migrações + carga de demonstração + 1ª sincronização
 npm start                     # http://127.0.0.1:3000
-npm test                      # regras de negócio + API + fumaça
+npm test                      # regras de negócio + API + fumaça (103 testes)
 ```
 
 ### Usuários criados pelo seed
@@ -116,6 +116,7 @@ public/              SPA: cenários, simulação (8 abas), comparação, alertas
                      relatório, integrações, parâmetros, permissões, usuários
 sql/                 001 schema · 002 ERP de demonstração · 003 escopo completo
 scripts/             migrate · seed · install-vps.sh · unit systemd
-test/                engine (regras de negócio) · api (contrato) · smoke
+test/                engine (regras de negócio) · api (contrato) · smoke ·
+                     e2e (percurso em Chromium pelas 18 telas)
 docs/                manual, arquitetura, rastreabilidade, deploy, protótipo
 ```

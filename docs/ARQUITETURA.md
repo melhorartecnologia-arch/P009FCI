@@ -93,6 +93,22 @@ quando o perfil não tem a capacidade (RF-035 · RF-100).
 | GET | `/` | — | RF-004 lista com indicadores |
 | POST | `/` | criarCenario | RF-001 |
 | GET | `/:id` | — | abre cenário + resultado |
+
+`GET /:id` devolve o pacote completo da tela de simulação:
+
+```
+{ cenario, parametros, validacao, resumo, exigeValidacaoTecnica,
+  governanca: { exigeValidacao, liberaConsolidacao, aprovadaVigente, pendente } }
+```
+
+`governanca.liberaConsolidacao` é o MESMO critério aplicado por
+`POST /:id/gov/consolidar` (RF-038 · RN-11): a tela decide o bloqueio do botão
+por ele, nunca por contagem própria de diffs — a aprovação técnica não apaga o
+diff da receita, de modo que contar alterações não diz se já foram aprovadas.
+Como uma edição posterior à aprovação pode invalidá-la, a aba de Governança
+confronta esse estado com `GET /:id/gov/validacao/historico`, que é a fonte
+autoritativa, e se redesenha quando divergirem.
+
 | PUT | `/:id/dados` | salvar | RF-007 |
 | POST | `/:id/recarregar` | salvar | RF-002 |
 | POST | `/:id/duplicar` | criarCenario | RF-003 |
