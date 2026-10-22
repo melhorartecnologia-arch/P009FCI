@@ -392,6 +392,18 @@ A soma das parcelas dos componentes é exatamente a parcela importada do produto
     <p>Para avaliar um fornecedor ou item que ainda não existe na operação, use
     <b>Incluir alternativa cadastral</b>. O item é criado <b>dentro do cenário</b>, marcado como
     alternativa, e não aparece nos demais cenários nem no cadastro oficial.</p>
+    <p>O formulário aceita, além do nome e do item de referência:</p>
+    <ul>
+      <li><b>Fornecedor e país</b> — se o fornecedor ainda não existe no cenário, ele é
+          <b>criado junto</b>, também como alternativa, e a alternativa passa a apontar para ele.
+          Informar um fornecedor já existente apenas o reaproveita.</li>
+      <li><b>Moeda e cotação</b> — a cotação informada entra no câmbio do cenário, pelas mesmas
+          regras da aba Câmbio: moeda parametrizada, nunca o Real, valor maior que zero.</li>
+      <li><b>FOB, frete + seguro e II + IPI + PIS/COFINS</b> — os valores que você digitar são os
+          da alternativa. Campos deixados em branco herdam o item de referência.</li>
+    </ul>
+    <p>A alternativa fica imediatamente disponível como item substituto nas estruturas deste
+    cenário (RF-020) e aparece entre os pontos alterados submetidos à validação técnica (RF-036).</p>
   </div>
 </div>
 
@@ -565,9 +577,19 @@ as latas, todos os maltes. <span class="perfil">Custos · Compras · Pricing · 
       <li><b>Congelar premissas</b> <span class="perfil">Controladoria</span> — trava todos os campos
           para rastreabilidade. Qualquer alteração posterior exige <b>criar uma nova versão</b>.</li>
       <li><b>Consolidar para decisão</b> <span class="perfil">Custos · Controladoria · Negócio</span>
-          — marca o cenário como calculado e apto à decisão executiva. É recusada se houver erro de
-          validação pendente ou alteração de receita não aprovada.</li>
+          — marca o cenário como calculado e apto à decisão executiva.</li>
     </ul>
+    <p>O botão <b>Consolidar</b> declara o motivo quando está indisponível, e o motivo distingue
+    três situações:</p>
+    <ul>
+      <li><b>Erro de validação de estrutura em aberto</b> — resolva na aba Validação primeiro.</li>
+      <li><b>Alteração de receita sem aprovação técnica registrada</b> — use <b>Submeter à
+          validação técnica</b>.</li>
+      <li><b>Alteração aguardando decisão</b> — já foi submetida; depende de Industrial/PCP ou
+          SGI/CGI aprovar ou reprovar.</li>
+    </ul>
+    <p>Assim que a validação é <b>aprovada</b>, o botão libera na mesma tela. Se você editar a
+    receita depois da aprovação, ela deixa de valer para a nova alteração e o ciclo recomeça.</p>
     <p>A <b>linha do tempo</b> no rodapé registra cada evento — criação, carga, edição, duplicação,
     mudança de status — com autor, data e as versões derivadas do cenário.</p>
   </div>
