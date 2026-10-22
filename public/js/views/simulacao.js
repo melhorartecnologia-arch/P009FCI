@@ -474,7 +474,7 @@ function abaEstrutura(S, host) {
     motivo: !permQtd.ok ? permQtd.motivo
       : 'Campo bloqueado no modo padrão: a quantidade da receita só é editável no modo avançado (RF-011). Alterne o modo na aba Governança (RF-034).',
   };
-  const permSub = permissao(S, ['substituir', 'editarEstrutura'], 'substituir componentes');
+  const permSub = permissao(S, ['substituir'], 'substituir componentes');
 
   // índice de ocorrências por componente, para o aviso junto da linha (RF-032)
   const porComponente = new Map();
@@ -750,7 +750,7 @@ function reverterSubstituicao(S, prodId, idx) {
  * ========================================================================== */
 
 async function assistenteSubstituicao(S, prodId, idx) {
-  const permSub = permissao(S, ['substituir', 'editarEstrutura'], 'substituir componentes');
+  const permSub = permissao(S, ['substituir'], 'substituir componentes');
   const prod = E.acharProduto(S.dados, prodId);
   const comp = prod && (prod.componentes || [])[idx];
   if (!comp) { S.ctx.toast('Componente não encontrado na estrutura do produto.', 'erro'); return; }
@@ -1273,7 +1273,13 @@ function blocoCustoEntrada(S, ins, perm) {
  * ========================================================================== */
 
 function abaCambio(S, host) {
-  const perm = permissao(S, ['editarFornecedor', 'editarFiscal'], 'alterar premissas cambiais e de importação');
+  // Esta aba aciona TRÊS rotas com exigências distintas, e cada controle precisa
+  // refletir a sua: PUT /sim/cambio e POST /sim/insumo/alternativa exigem
+  // «editarFornecedor»; PUT /sim/insumo aceita «editarFiscal» ou
+  // «editarFornecedor». Governar tudo por uma permissão só deixava o perfil
+  // Fiscal com a cotação habilitada para receber 403 ao salvar.
+  const perm = permissao(S, ['editarFornecedor', 'editarFiscal'], 'alterar a origem e o custo de importação dos itens');
+  const permMoedaCenario = permissao(S, ['editarFornecedor'], 'alterar a cotação das moedas e incluir alternativas cadastrais');
   const porMoeda = new Map(E.insumosPorMoeda(S.dados).map((m) => [m.moeda, m]));
   const codigos = [...new Set([...Object.keys(E.MOEDAS), ...Object.keys(S.dados.cambio || {}), ...porMoeda.keys()])];
 
@@ -1285,11 +1291,11 @@ function abaCambio(S, host) {
         <div class="texto-mini">Cotação parametrizável por moeda; a alteração recalcula em lote o custo FCI de todos os insumos vinculados (RF-052 · RF-054).
         Vale apenas neste cenário — o cadastro oficial permanece intacto (RF-007).</div>
       </div>
-      <button class="btn btn-ouro" id="cb-alternativa" ${attrs(perm, 'Cria no cenário um item/fornecedor alternativo em outra moeda (RF-055)')}>＋ Incluir alternativa cadastral</button>
+      <button class="btn btn-ouro" id="cb-alternativa" ${attrs(permMoedaCenario, 'Cria no cenário um item/fornecedor alternativo em outra moeda (RF-055)')}>＋ Incluir alternativa cadastral</button>
     </div>
 
     <div class="pilha">
-      ${codigos.map((cod) => cartaoMoeda(S, cod, porMoeda.get(cod), perm)).join('')}
+      ${codigos.map((cod) => cartaoMoeda(S, cod, porMoeda.get(cod), permMoedaCenario, perm)).join('')}
     </div>
 
     <div class="nota-rodape">
@@ -1346,7 +1352,7 @@ function somaCustoMoeda(dados, moeda, cambio) {
     .reduce((a, i) => a + E.custoFCI(i, cambio), 0);
 }
 
-function cartaoMoeda(S, cod, info, perm) {
+function cartaoMoeda(S, cod, info, permCotacao, permInsumo) {
   const meta = E.MOEDAS[cod] || { codigo: cod, nome: cod, simbolo: '' };
   const cotacao = cod === 'BRL' ? 1 : E.n((S.dados.cambio || {})[cod], info ? info.cotacao : 0);
   const padrao = cod === 'BRL' ? 1 : E.n((S.dados.cambioPadrao || {})[cod]);
@@ -1356,7 +1362,7 @@ function cartaoMoeda(S, cod, info, perm) {
   const custoPadrao = vinculados.reduce((a, i) => a + E.custoFCI(i, S.dados.cambioPadrao || S.dados.cambio), 0);
   const permMoeda = cod === 'BRL'
     ? { ok: false, motivo: 'Real é a moeda base do cenário: a cotação é fixa em 1,0000.' }
-    : perm;
+    : permCotacao;
 
   return `
   <div class="card" style="overflow:hidden;">
@@ -1387,7 +1393,7 @@ function cartaoMoeda(S, cod, info, perm) {
       <div style="flex:1;"></div>
       ${chip(`${vinculados.length} insumo(s) vinculado(s)`, 'var(--line-2)', 'var(--ink-2)', 'Insumos cuja premissa de custo depende desta moeda (RF-053)')}
     </div>
-    ${vinculados.length ? vinculados.map((ins) => linhaInsumoMoeda(S, ins, perm)).join('') : vazio('Nenhum insumo vinculado a esta moeda no cenário.')}
+    ${vinculados.length ? vinculados.map((ins) => linhaInsumoMoeda(S, ins, permInsumo)).join('') : vazio('Nenhum insumo vinculado a esta moeda no cenário.')}
   </div>`;
 }
 
@@ -1541,7 +1547,9 @@ function modalAlternativa(S) {
  * ========================================================================== */
 
 function abaVolumes(S, host) {
-  const perm = permissao(S, ['editarSaida', 'editarPremissas'], 'alterar volumes e preços de saída');
+  // PUT /sim/saidas exige «editarSaida»: aceitar «editarPremissas» aqui habilitava
+  // os campos para o perfil Compras, que só descobria a restrição ao salvar.
+  const perm = permissao(S, ['editarSaida'], 'alterar volumes e preços de saída');
   const permCarga = permissao(S, ['editarSaida'], 'recarregar a base de saídas');
   const prod = E.acharProduto(S.dados, S.prodId);
   const pesos = E.pesosUF(prod);
