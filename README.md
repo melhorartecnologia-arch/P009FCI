@@ -117,6 +117,7 @@ public/              SPA: cenários, simulação (8 abas), comparação, alertas
 sql/                 001 schema · 002 ERP de demonstração · 003 escopo completo
 scripts/             migrate · seed · install-vps.sh · unit systemd
 test/                engine (regras de negócio) · api (contrato) · smoke ·
-                     e2e (percurso em Chromium pelas 18 telas)
+                     e2e (percurso em Chromium pelas 18 telas) ·
+                     fluxo-manual (as 11 etapas do manual, com os perfis de cada uma)
 docs/                manual, arquitetura, rastreabilidade, deploy, protótipo
 ```
