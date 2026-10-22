@@ -799,3 +799,22 @@ test('RF-026 · RF-027 — quantidades de unidades distintas não são somadas n
   // a posição em «un» não entra na soma: o grupo fecha 1 kg e não acusa quantidade
   assert.strictEqual(itens.filter((v) => v.tipo === 'quantidade' && /Grao/.test(v.msg)).length, 0);
 });
+
+test('RF-026 — grupo obrigatório com quantidade zero não acusa ausência', () => {
+  // A receita carregada do ERP deriva os grupos obrigatórios somando as
+  // quantidades; uma linha zerada produziria um grupo exigido em 0. Acusar
+  // ausência nesse caso seria falso positivo — não há nada a exigir.
+  const d = cenario();
+  const pa = d.produtos.find((p) => p.id === 'PA-TESTE');
+  pa.obrig = [{ grupo: 'Embalagem', qtd: 0, unidade: 'un', tol: 0 }];
+  pa.componentes = [{ ref: 'MP-CI', qtd: 0, qtdPadrao: 0, unidade: 'un' }];
+  const itens = E.validar(d);
+  assert.strictEqual(itens.filter((v) => v.tipo === 'obrigatorio').length, 0);
+
+  // mas a ausência real — quantidade exigida maior que zero — segue bloqueando
+  pa.obrig = [{ grupo: 'Embalagem', qtd: 1, unidade: 'un', tol: 0 }];
+  pa.componentes = [{ ref: 'MP-NAC', qtd: 1, qtdPadrao: 1, unidade: 'kg' }];
+  const comFalta = E.validar(d).filter((v) => v.tipo === 'obrigatorio');
+  assert.strictEqual(comFalta.length, 1);
+  assert.match(comFalta[0].msg, /Embalagem/);
+});

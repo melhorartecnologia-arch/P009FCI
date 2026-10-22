@@ -1078,7 +1078,11 @@ export function validar(data, opcoes = {}) {
           msg: `${rotuloProd}: o grupo obrigatório «${o.grupo}» é medido em ${o.unidade}, mas a receita o atende com ${[...unidadesDivergentes].join(' · ')} — unidades incompatíveis não podem ser somadas. Revise a substituição.`,
         });
       }
-      if (!achou) {
+      // Um grupo cuja quantidade exigida é zero não é, de fato, exigido: a
+      // receita carregada do ERP pode trazer linha zerada, e acusar ausência aí
+      // seria falso positivo. A conferência de quantidade abaixo continua
+      // valendo e acusa se algo for informado onde a receita pede zero.
+      if (!achou && n(o.qtd) > EPS) {
         add({
           tipo: 'obrigatorio', prodId: p.id, campo: 'obrig',
           msg: `${rotuloProd}: componente obrigatório ausente — grupo «${o.grupo}», quantidade esperada ${num(o.qtd, 3)} ${o.unidade || ''}.`.trim(),
