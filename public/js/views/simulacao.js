@@ -160,6 +160,10 @@ export async function telaSimulacao(el, ctx, params) {
     S.validacao = resp.validacao;
     S.resumo = resp.resumo;
     S.exigeValidacao = resp.exigeValidacaoTecnica;
+    // RF-038 — só o pacote completo de GET /cenarios/:id traz a situação da
+    // validação técnica; as respostas de edição não a recalculam, então o
+    // último estado conhecido é preservado.
+    if (resp.governanca) S.governanca = resp.governanca;
     S.derivar();
   };
 
@@ -2243,11 +2247,23 @@ function abaGovernanca(S, host) {
   const congelado = status === 'congelado' || status === 'consolidado';
   const consolidado = status === 'consolidado';
 
-  // RF-038 — motivo declarado do bloqueio de congelar e consolidar
+  // RF-038 — motivo declarado do bloqueio de congelar e consolidar.
+  // A liberação vem do servidor (`governanca.liberaConsolidacao`), que é o
+  // mesmo critério aplicado por POST /gov/consolidar: a aprovação técnica não
+  // apaga o diff da receita, então contar `graves` não diz se a alteração já
+  // foi aprovada. Sem esse dado a tela manteria o botão travado justamente
+  // depois da aprovação, impedindo o encerramento do ciclo de governança.
+  const govSrv = S.governanca || {};
+  const liberaConsolidar = govSrv.liberaConsolidacao != null
+    ? govSrv.liberaConsolidacao
+    : !graves.length;
+  const pendenteValidacao = !!govSrv.pendente;
   const motivoBloqueio = temErro
     ? (S.diag.motivo || `Cenário com ${S.diag.nErros} erro(s) de validação de estrutura (RF-025).`)
-    : (graves.length && !S.cenario.validacao_aprovada
-      ? `Há ${graves.length} alteração(ões) de receita sem aprovação técnica registrada — a consolidação depende da validação (RF-038 · RN-11).`
+    : (!liberaConsolidar
+      ? (pendenteValidacao
+        ? `Há ${graves.length} alteração(ões) de receita aguardando decisão da validação técnica — a consolidação depende da aprovação (RF-038 · RN-11).`
+        : `Há ${graves.length} alteração(ões) de receita sem aprovação técnica registrada — a consolidação depende da validação (RF-038 · RN-11).`)
       : null);
 
   const bloqueioCongelar = { ...permCongelar };
@@ -2424,6 +2440,24 @@ function abaGovernanca(S, host) {
   (async () => {
     const { r: resp } = await lerApi(S, `/cenarios/${S.id}/gov/validacao/historico`, () => ({ historico: [] }));
     const lista = Array.isArray(resp) ? resp : (resp.historico || resp.validacoes || []);
+    // RF-038 — esta rota é a fonte autoritativa da liberação: uma edição
+    // posterior à aprovação pode tê-la invalidado, e o pacote do cenário em
+    // memória ficaria defasado. Se a situação mudou, redesenha a aba para que
+    // o botão «Consolidar» reflita o que o servidor realmente aceita.
+    if (resp && resp.liberaConsolidacao != null) {
+      const antes = S.governanca || {};
+      if (antes.liberaConsolidacao !== resp.liberaConsolidacao
+        || !!antes.pendente !== !!resp.pendente) {
+        S.governanca = {
+          exigeValidacao: resp.exigeValidacao,
+          liberaConsolidacao: resp.liberaConsolidacao,
+          aprovadaVigente: resp.aprovadaVigente,
+          pendente: resp.pendente,
+        };
+        S.render();
+        return;                       // o render refaz esta aba com o estado certo
+      }
+    }
     const alvo = host.querySelector('#gov-historico');
     if (!alvo) return;
     alvo.innerHTML = lista.length ? `

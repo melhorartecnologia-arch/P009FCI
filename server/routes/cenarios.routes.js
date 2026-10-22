@@ -74,12 +74,23 @@ router.get('/:id', async (req, res, next) => {
     const cenario = await cenarioService.obterCenario(req.params.id);
     const params = await carregarParametros();
     const dados = cenario.dados || {};
+    // RF-038 — a situação da validação técnica acompanha o pacote do cenário
+    // para que a tela decida o bloqueio da consolidação pelo mesmo critério do
+    // servidor, sem depender de uma segunda chamada.
+    const gov = require('../services/governanca.service');
+    const situacao = await gov.situacaoValidacao(cenario);
     res.json({
       cenario,
       parametros: params,
       validacao: E.diagnostico(dados, { modo: cenario.modo }),
       resumo: E.resumoCenario(dados, cenario.base_calculo, params),
       exigeValidacaoTecnica: E.exigeValidacaoTecnica(dados),
+      governanca: {
+        exigeValidacao: situacao.exigeValidacao,
+        liberaConsolidacao: situacao.liberaConsolidacao,
+        aprovadaVigente: situacao.aprovadaVigente,
+        pendente: situacao.pendente,
+      },
     });
   } catch (err) { next(err); }
 });
