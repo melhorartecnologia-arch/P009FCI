@@ -712,3 +712,39 @@ test('RN-11 — alteração que não é de receita preserva a aprovação vigent
   const cons = await req('POST', `/cenarios/${id}/gov/consolidar`, {}, tokens.negocio);
   assert.strictEqual(cons.status, 200, JSON.stringify(cons.json));
 });
+
+/* ========================================== Idioma das respostas RNF-03 */
+
+const INGLES = /\b(invalid input syntax|Cannot (GET|PUT|POST|DELETE)|Expected property name|Internal Server Error|Unexpected token)\b/i;
+
+test('RNF-03 — caminho inexistente sob /api responde no envelope da API, em português', async () => {
+  for (const [metodo, caminho] of [['GET', '/auth/eu'], ['DELETE', '/cenarios/1'], ['GET', '/fontes/999999/nada']]) {
+    const r = await req(metodo, caminho, undefined, tokens.custos);
+    assert.strictEqual(r.status, 404, `${metodo} ${caminho}`);
+    assert.ok(r.json && typeof r.json.erro === 'string', 'o erro vem no envelope { erro }');
+    assert.ok(!INGLES.test(r.json.erro), `mensagem em inglês: ${r.json.erro}`);
+    assert.match(r.json.erro, /não encontrada/i);
+  }
+});
+
+test('RNF-03 — identificador não numérico não vaza mensagem do banco', async () => {
+  // A SPA aceita qualquer coisa em «#/sim/<id>»: um favorito truncado chega
+  // aqui como texto e, sem guarda, o PostgreSQL responde em inglês.
+  for (const id of ['abc', '12x', '../etc', '1e9999']) {
+    const r = await req('GET', `/cenarios/${encodeURIComponent(id)}`, undefined, tokens.custos);
+    assert.ok(r.status === 404 || r.status === 422, `id «${id}» devolveu ${r.status}`);
+    assert.ok(!INGLES.test(r.json.erro || ''), `mensagem em inglês para «${id}»: ${r.json.erro}`);
+  }
+});
+
+test('RNF-03 — corpo JSON malformado é recusado em português', async () => {
+  const resp = await fetch(`${base}/api/cenarios`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokens.custos}` },
+    body: '{corpo quebrado',
+  });
+  const json = await resp.json();
+  assert.strictEqual(resp.status, 400);
+  assert.ok(!INGLES.test(json.erro), `mensagem em inglês: ${json.erro}`);
+  assert.match(json.erro, /JSON v[áa]lido/i);
+});

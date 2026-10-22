@@ -100,7 +100,18 @@ async function listarCenarios(limite = LIMITE_PAINEL) {
 }
 
 async function obterCenario(id) {
-  const { rows } = await query('SELECT * FROM cenarios WHERE id = $1', [id]);
+  // A SPA aceita qualquer coisa em «#/sim/<id>» — um favorito truncado ou um
+  // link compartilhado estragado chega aqui como texto. Sem esta guarda, o
+  // PostgreSQL recusa a conversão e o erro cru dele («invalid input syntax for
+  // type integer») vai parar na tela, em inglês (RNF-03). Um identificador que
+  // não é número simplesmente não nomeia cenário algum.
+  const num = Number(id);
+  if (!Number.isInteger(num) || num <= 0) {
+    const e = new Error('Cenário não encontrado.');
+    e.status = 404;
+    throw e;
+  }
+  const { rows } = await query('SELECT * FROM cenarios WHERE id = $1', [num]);
   if (!rows[0]) { const e = new Error('Cenário não encontrado.'); e.status = 404; throw e; }
   return rows[0];
 }
