@@ -201,6 +201,17 @@ onde `confronto` traz as inconsistências NOVAS geradas pela edição (RF-031).
 1. Nenhuma operação altera as bases de origem — conectores só leem (RNF-06).
 2. Cenário congelado ou consolidado recusa edição com HTTP 409 (RN-10).
 3. Consolidação é recusada com erro de validação pendente (RF-008 · RF-025) ou
-   com alteração de receita não aprovada (RF-038 · RN-11).
+   com alteração de receita não aprovada (RF-038 · RN-11). A vigência de uma
+   aprovação é decidida **pela assinatura dos pontos aprovados**, nunca por
+   data: comparar o instante da decisão com o da última alteração não diz o que
+   o validador examinou, e deixa passar a alteração feita entre a submissão e a
+   decisão.
 4. Credencial de integração nunca sai da API em texto claro (RNF-05).
 5. Toda alteração relevante gera evento em `cenario_eventos` (RNF-04).
+6. Agendamento de sincronização nunca derruba gravação nem partida: horário
+   inválido é recusado na entrada (422), `cronDe` jamais interpola valor fora
+   do formato, e uma fonte que não pode ser agendada é registrada e pulada, em
+   vez de abortar o boot (RF-093 · RNF-07).
+7. A tela só habilita um controle se a rota correspondente aceitar a capacidade
+   do perfil ativo — divergir disso oferece ao usuário uma ação que termina em
+   403 depois da tentativa (RF-035 · RF-100).

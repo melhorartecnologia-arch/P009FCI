@@ -11,7 +11,7 @@ Legenda das colunas:
 - **Tela** — onde o usuário exerce o requisito.
 - **Teste** — `E` = `test/engine.test.js` · `A` = `test/api.test.js` · `S` = `test/smoke.test.js`.
 
-Além dos 103 testes automatizados, `test/e2e.js` percorre as 18 telas em
+Além dos 108 testes automatizados, `test/e2e.js` percorre as 18 telas em
 Chromium e falha se houver erro de console, HTTP 5xx ou se a autenticação não
 montar a casca da aplicação. Ele entra pela **raiz** do endereço, não por
 `#/login`: entrar pelo atalho mascarava o defeito de rota pós-autenticação
@@ -229,3 +229,7 @@ Cada achado foi reproduzido antes da correção e verificado depois.
 | RF-055 | O modal enviava `refBase`/`ref` e a rota lia `base`; os campos aduaneiros, o fornecedor e a cotação eram descartados em silêncio | «Incluir alternativa cadastral» sempre falhava com 422; corrigido o envio, a alternativa ainda nascia com os custos do item base e sem o fornecedor informado |
 | RF-060 | `listarCenarios()` não selecionava `base_calculo` | O selo «base: custo» nunca aparecia no cartão do cenário |
 | RF-073 · RF-078 | Ids de cenário do `dataset` (texto) comparados por `===` com os da API (inteiros) | Retirar cenário da seleção, focar coluna e abrir o painel não surtiam efeito, sem erro visível |
+| RF-093 | Horário da fonte sem validação virava expressão cron `undefined 6 * * *` | HTTP 500 em inglês, fonte gravada com a tela reportando erro, e a aplicação deixava de subir no restart seguinte |
+| RF-068 · RF-035 | A tela aceitava capacidade alternativa que a rota não aceita | Compras via volume e preço editáveis e levava 403 ao salvar; Fiscal, o mesmo na cotação |
+| RN-11 | A vigência da aprovação técnica era decidida por data, não pelo que foi aprovado | Alteração de receita feita entre a submissão e a decisão consolidava sem nunca ter sido validada |
+| RNF-01 | `GET /cenarios` recalculava o histórico inteiro a cada abertura do painel | 4,9 s com 1.272 cenários acumulados, crescendo linearmente |

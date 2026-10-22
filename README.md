@@ -60,7 +60,7 @@ cp .env.example .env          # preencha PG* e gere FCI_SECRET_KEY / FCI_JWT_SEC
 npm install
 npm run setup                 # migrações + carga de demonstração + 1ª sincronização
 npm start                     # http://127.0.0.1:3000
-npm test                      # regras de negócio + API + fumaça (103 testes)
+npm test                      # regras de negócio + API + fumaça (108 testes)
 ```
 
 ### Usuários criados pelo seed
