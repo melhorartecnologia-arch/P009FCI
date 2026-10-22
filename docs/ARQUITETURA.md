@@ -155,6 +155,7 @@ onde `confronto` traz as inconsistências NOVAS geradas pela edição (RF-031).
 | GET | `/padrao` | RF-081 |
 | POST | `/` | RF-080 · RF-082 |
 | GET | `/historico?contexto` | RF-080 |
+| DELETE | `/historico?contexto` | RF-080 — limpa a conversa do recorte |
 
 ### 4.6 Relatório — `/api/cenarios/:id/relatorio`
 | Método | Rota | Capacidade | Requisito |

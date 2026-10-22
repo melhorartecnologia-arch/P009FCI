@@ -70,7 +70,7 @@ function desenhar(R, el, ctx) {
 
   ctx.definirTopo(
     'Relatório executivo',
-    `RF-087 · RF-088 · RF-089 — ${esc(c.codigo)} v${c.versao} · emitido por ${esc(rel.emissao.por)} em ${esc(rel.emissao.emBr)}`,
+    `RF-087 · RF-088 · RF-089 — ${esc(c.codigo)} v${esc(String(c.versao))} · emitido por ${esc(rel.emissao.por)} em ${esc(rel.emissao.emBr)}`,
     `<span class="chip" style="background:var(--panel-2);color:var(--ink-2);border:1px solid var(--line);">${esc(rel.rotulos.status)}</span>`
   );
   ctx.definirAlertas(ind.nAlertas);
@@ -108,7 +108,7 @@ function desenhar(R, el, ctx) {
       </header>
       <div class="rel-ident">
         ${ident('CENÁRIO', `${esc(c.nome)}`)}
-        ${ident('IDENTIFICADOR · VERSÃO', `<span class="mono">${esc(c.codigo)}</span> · v${c.versao}`)}
+        ${ident('IDENTIFICADOR · VERSÃO', `<span class="mono">${esc(c.codigo)}</span> · v${esc(String(c.versao))}`)}
         ${ident('TIPO · CICLO', `${esc(rel.rotulos.tipo)} ${esc(c.ciclo || '')}`)}
         ${ident('SITUAÇÃO', esc(rel.rotulos.status))}
         ${ident('AUTOR', esc(c.autor))}
@@ -209,7 +209,7 @@ function desenhar(R, el, ctx) {
       ${p.emissoes.length ? `<div style="overflow-x:auto;"><table class="tabela">
         <thead><tr><th>EMITIDO EM</th><th>VERSÃO</th><th>FORMATO</th><th>ARQUIVO</th></tr></thead>
         <tbody>${p.emissoes.map((e) => `<tr>
-          <td>${dataHora(e.gerado_em)}</td><td class="mono">v${e.versao}</td>
+          <td>${dataHora(e.gerado_em)}</td><td class="mono">v${esc(String(e.versao))}</td>
           <td>${esc(String(e.formato).toUpperCase())}</td>
           <td class="mono" style="font-size:10.5px;">${esc(e.gerado_nome || '—')}</td></tr>`).join('')}
         </tbody></table></div>` : `

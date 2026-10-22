@@ -141,7 +141,9 @@ function lerSelecao(resp, reserva) {
   const lista = Array.isArray(r.selecao) ? r.selecao
     : (obj && obj.cenarioIds) || r.cenarioIds || r.ids || reserva || [];
   return {
-    ids: lista.slice(),
+    // os identificadores trafegam como inteiros — normalizar evita seleção
+    // com tipos mistos quando o payload traz texto (RF-073)
+    ids: lista.map(idCen).filter((x) => x != null),
     limite: (obj && obj.limite) || r.limite || E.LIMITE_COMPARACAO,
     prodFoco: (obj && obj.prodFoco) || r.prodFoco || null,
     origem: (obj && obj.origem) || r.origemSelecao || '',
@@ -283,9 +285,23 @@ function ajustarFoco() {
   if (!cens.some((c) => c.id === estado.cenarioFoco)) estado.cenarioFoco = cens[0].id;
 }
 
+/**
+ * Identificador de cenário vindo do DOM. `cenarios.id` é SERIAL (sql/001) e a
+ * API devolve inteiros; `dataset` devolve sempre texto. Sem esta conversão a
+ * comparação estrita falharia na retirada do cenário da seleção, no destaque
+ * da coluna em foco e na abertura do painel (RF-073 · RF-078).
+ */
+function idCen(valor) {
+  if (valor == null || valor === '') return null;
+  const texto = String(valor).trim();
+  const n = Number(texto);
+  return Number.isFinite(n) && String(n) === texto ? n : valor;
+}
+
 function cenarioPorId(id) {
-  return cenariosDaMatriz().find((c) => c.id === id) ||
-    (vista.disponiveis || []).find((c) => c.id === id) || null;
+  const mesmo = (c) => String(c.id) === String(id);
+  return cenariosDaMatriz().find(mesmo) ||
+    (vista.disponiveis || []).find(mesmo) || null;
 }
 
 function congeladoCenario(c) {
@@ -1429,7 +1445,7 @@ function ligarEventos(ctx) {
 
   // 1 · seleção de cenários (RF-073)
   raiz.querySelectorAll('[data-cen-chip]').forEach((b) => b.addEventListener('click', () => {
-    alternarCenario(ctx, b.dataset.cenChip);
+    alternarCenario(ctx, idCen(b.dataset.cenChip));
   }));
 
   raiz.querySelector('#sel-base')?.addEventListener('change', async (e) => {
@@ -1446,7 +1462,7 @@ function ligarEventos(ctx) {
   // 2 · matriz — célula coloca produto e cenário em foco; cabeçalho abre o painel
   raiz.querySelectorAll('[data-cel-prod]').forEach((c) => c.addEventListener('click', () => {
     const prodId = c.dataset.celProd;
-    const cenarioId = c.dataset.celCen;
+    const cenarioId = idCen(c.dataset.celCen);
     if (!cenarioId) { trocarFoco(ctx, { prodId }); return; }
     trocarFoco(ctx, { prodId, cenarioId });
   }));
@@ -1454,7 +1470,7 @@ function ligarEventos(ctx) {
     trocarFoco(ctx, { prodId: td.parentElement.dataset.linhaProd });
   }));
   raiz.querySelectorAll('[data-col-cen]').forEach((th) => th.addEventListener('click', () => {
-    abrirPainelCenario(ctx, th.dataset.colCen);          // RF-078
+    abrirPainelCenario(ctx, idCen(th.dataset.colCen));   // RF-078
   }));
 
   // 3 · drill-down — expansão apenas em itens com nível inferior (RF-075)
@@ -1467,7 +1483,7 @@ function ligarEventos(ctx) {
   }));
 
   raiz.querySelector('#sel-prod-foco')?.addEventListener('change', (e) => trocarFoco(ctx, { prodId: e.target.value }));
-  raiz.querySelector('#sel-cen-foco')?.addEventListener('change', (e) => trocarFoco(ctx, { cenarioId: e.target.value }));
+  raiz.querySelector('#sel-cen-foco')?.addEventListener('change', (e) => trocarFoco(ctx, { cenarioId: idCen(e.target.value) }));
   raiz.querySelector('#btn-abrir-sim')?.addEventListener('click', () => {
     if (!estado.cenarioFoco) { ctx.toast('Selecione um cenário na comparação.', 'erro'); return; }
     ctx.navegar(`#/sim/${estado.cenarioFoco}`);
