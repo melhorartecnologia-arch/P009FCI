@@ -204,6 +204,24 @@ Acesse **`http://IP_DA_VPS`** no navegador → tela de login do Simulador FCI.
    (VPN/peering da rede da CCI, quando aplicável).
 4. Crie um cenário de teste e confirme a estrutura carregada (marco M1).
 
+### G-1 · Conferência da instalação
+
+A sequência abaixo foi validada em base vazia e é determinística — se os três
+passos fecharem, a instalação está íntegra:
+
+```bash
+cd /opt/simulador-fci
+sudo -u fci npm run migrate      # 001_schema · 002_erp_demo · 003_app
+sudo -u fci npm run seed         # 10 usuários · parâmetros · 5 fontes + 1ª sincronização
+sudo -u fci npm install --include=dev && sudo -u fci npm test
+```
+
+O seed deve relatar as cinco sincronizações iniciais (`protheus`,
+`portal_custos`, `precos`, `cambio`, `compras`) e a bateria de testes deve
+fechar **98/98**. As migrações usam `IF NOT EXISTS` em todas as criações, então
+reexecutá-las é seguro e não destrói dados.
+
+
 ---
 
 ## Parte H · Operação do dia a dia
