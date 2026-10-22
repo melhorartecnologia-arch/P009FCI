@@ -72,12 +72,30 @@ async function recarregarEstrutura(id, usuario) {
   return rows[0];
 }
 
-async function listarCenarios() {
+/**
+ * RF-004 · RNF-01 — lista de cenários do painel.
+ *
+ * Cada linha carrega o snapshot JSONB inteiro, e a rota roda o motor sobre
+ * todos para recalcular os indicadores. Sem teto, o custo cresce linearmente
+ * com o histórico: medido em 4,9 s com 1.272 cenários acumulados. O limite
+ * mantém o tempo de abertura estável e o total é devolvido à parte, para que a
+ * tela informe quantos existem além dos exibidos.
+ */
+const LIMITE_PAINEL = 200;
+
+async function listarCenarios(limite = LIMITE_PAINEL) {
+  const teto = Number.isFinite(Number(limite)) && Number(limite) > 0
+    ? Math.min(Math.trunc(Number(limite)), 1000)
+    : LIMITE_PAINEL;
   const { rows } = await query(
     `SELECT id, codigo, nome, tipo, ciclo, status, versao, origem_id, autor_nome, modo,
             base_calculo, origem_dados, dados, criado_em, atualizado_em
-       FROM cenarios ORDER BY id DESC`
+       FROM cenarios ORDER BY id DESC LIMIT $1`,
+    [teto]
   );
+  const { rows: tot } = await query('SELECT count(*)::int AS n FROM cenarios');
+  rows.total = tot[0].n;
+  rows.limite = teto;
   return rows;
 }
 

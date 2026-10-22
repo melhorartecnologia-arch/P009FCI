@@ -33,7 +33,7 @@ router.get('/', async (req, res, next) => {
   try {
     const E = engine();
     const params = await carregarParametros();
-    const cenarios = await cenarioService.listarCenarios();
+    const cenarios = await cenarioService.listarCenarios(req.query.limite);
     const comIndicadores = cenarios.map((c) => {
       let resumo = { ciMedio: 0, nProdutos: 0, acima40: 0, dist: {}, porProduto: [] };
       let nAlertas = 0, nErros = 0;
@@ -53,7 +53,14 @@ router.get('/', async (req, res, next) => {
         },
       };
     });
-    res.json({ cenarios: comIndicadores, parametros: params });
+    res.json({
+      cenarios: comIndicadores,
+      parametros: params,
+      // RNF-01 — o painel recalcula os indicadores de cada cenário exibido; o
+      // total informa quantos existem além do teto aplicado.
+      total: cenarios.total == null ? comIndicadores.length : cenarios.total,
+      limite: cenarios.limite == null ? comIndicadores.length : cenarios.limite,
+    });
   } catch (err) { next(err); }
 });
 

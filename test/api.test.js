@@ -660,3 +660,55 @@ test('RNF-07 — horário corrompido no banco não impede a partida do agendador
   assert.strictEqual(sync.cronDe({ sync_freq: '15min' }), '*/15 * * * *');
   assert.strictEqual(sync.cronDe({ sync_freq: 'manual' }), null);
 });
+
+/* ========================= Vigência da aprovação técnica RN-11 · RF-038 */
+
+test('RN-11 — alteração de receita entre a submissão e a decisão não é coberta pela aprovação', async () => {
+  const id = await novoCenario('RN-11 entre submissão e decisão');
+  await req('PUT', `/cenarios/${id}/sim/modo`, { modo: 'avancado' }, tokens.controladoria);
+  await req('PUT', `/cenarios/${id}/sim/componente/qtd`, { prodId: 'PA-9001', idx: 2, qtd: 1.4 }, tokens.controladoria);
+
+  const sub = await req('POST', `/cenarios/${id}/gov/validacao/submeter`, {}, tokens.controladoria);
+  const vid = (sub.json.submissao || sub.json.validacao || sub.json).id;
+
+  // alteração B, feita DEPOIS de submeter: o validador não a examina
+  await req('PUT', `/cenarios/${id}/sim/componente/qtd`, { prodId: 'PA-9001', idx: 3, qtd: 2 }, tokens.controladoria);
+  await req('POST', `/validacoes/${vid}/decidir`, { decisao: 'aprovada', notas: 'ok' }, tokens.sgi);
+
+  // decidir é posterior à alteração B: decidir por data daria a aprovação como
+  // vigente e consolidaria receita que ninguém validou, num estado que a RN-10
+  // já não deixa editar.
+  const pac = await req('GET', `/cenarios/${id}`, undefined, tokens.controladoria);
+  assert.strictEqual(pac.json.governanca.liberaConsolidacao, false,
+    'a aprovação não cobre o ponto que não foi submetido');
+
+  const cons = await req('POST', `/cenarios/${id}/gov/consolidar`, {}, tokens.negocio);
+  assert.strictEqual(cons.status, 409, JSON.stringify(cons.json));
+
+  // submeter e aprovar o conjunto atual libera
+  const sub2 = await req('POST', `/cenarios/${id}/gov/validacao/submeter`, {}, tokens.controladoria);
+  const vid2 = (sub2.json.submissao || sub2.json.validacao || sub2.json).id;
+  await req('POST', `/validacoes/${vid2}/decidir`, { decisao: 'aprovada', notas: 'ok' }, tokens.sgi);
+  const dep = await req('GET', `/cenarios/${id}`, undefined, tokens.controladoria);
+  assert.strictEqual(dep.json.governanca.liberaConsolidacao, true);
+  const ok = await req('POST', `/cenarios/${id}/gov/consolidar`, {}, tokens.negocio);
+  assert.strictEqual(ok.status, 200, JSON.stringify(ok.json));
+});
+
+test('RN-11 — alteração que não é de receita preserva a aprovação vigente', async () => {
+  const id = await novoCenario('RN-11 alteração não-receita');
+  await req('PUT', `/cenarios/${id}/sim/modo`, { modo: 'avancado' }, tokens.controladoria);
+  await req('PUT', `/cenarios/${id}/sim/componente/qtd`, { prodId: 'PA-9001', idx: 2, qtd: 1.4 }, tokens.controladoria);
+  const sub = await req('POST', `/cenarios/${id}/gov/validacao/submeter`, {}, tokens.controladoria);
+  const vid = (sub.json.submissao || sub.json.validacao || sub.json).id;
+  await req('POST', `/validacoes/${vid}/decidir`, { decisao: 'aprovada', notas: 'ok' }, tokens.sgi);
+
+  // câmbio não é receita: a assinatura dos pontos não muda e a aprovação segue valendo
+  const cam = await req('PUT', `/cenarios/${id}/sim/cambio`, { moeda: 'USD', cotacao: 6.3 }, tokens.controladoria);
+  assert.strictEqual(cam.status, 200, JSON.stringify(cam.json));
+  const pac = await req('GET', `/cenarios/${id}`, undefined, tokens.controladoria);
+  assert.strictEqual(pac.json.governanca.liberaConsolidacao, true,
+    'exigir nova validação por uma alteração cambial travaria o ciclo sem motivo');
+  const cons = await req('POST', `/cenarios/${id}/gov/consolidar`, {}, tokens.negocio);
+  assert.strictEqual(cons.status, 200, JSON.stringify(cons.json));
+});

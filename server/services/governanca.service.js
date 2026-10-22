@@ -172,13 +172,21 @@ async function situacaoValidacao(cenario) {
     [cenario.id]
   );
   const assinaturaAtual = assinaturaPontos(E.diffs(dados));
-  const ultimaAlteracao = cenario.atualizado_em ? new Date(cenario.atualizado_em).getTime() : 0;
   const aprovadas = rows
     .filter((v) => v.status === 'aprovada' && v.decidido_em)
     .sort((a, b) => new Date(b.decidido_em) - new Date(a.decidido_em));
-  const aprovadaVigente = aprovadas.find((v) =>
-    new Date(v.decidido_em).getTime() >= ultimaAlteracao
-    || assinaturaPontos(v.pontos) === assinaturaAtual) || null;
+  // RN-11 — a vigência é decidida SÓ pelo que foi aprovado, nunca por data.
+  // Comparar `decidido_em` com a última alteração do cenário não diz o que o
+  // validador viu: uma alteração feita entre a submissão e a decisão fica mais
+  // antiga que a decisão e passaria a ser coberta por uma aprovação que nunca
+  // a examinou — consolidando receita que ninguém validou, num estado que a
+  // RN-10 já não deixa editar. A assinatura dos pontos cobre todos os fluxos
+  // legítimos: alteração submetida e aprovada permanece vigente, edição que
+  // não é de receita não altera a assinatura, e nova alteração de receita
+  // volta a exigir validação.
+  const aprovadaVigente = aprovadas.find(
+    (v) => assinaturaPontos(v.pontos) === assinaturaAtual
+  ) || null;
   const exigeValidacao = E.exigeValidacaoTecnica(dados);
   return {
     validacoes: rows,

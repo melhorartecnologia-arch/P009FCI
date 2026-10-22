@@ -53,6 +53,9 @@ export async function telaCenarios(el, ctx) {
   }
 
   const cenarios = resposta.cenarios || [];
+  // RNF-01 — o painel recalcula os indicadores de cada cenário exibido, então a
+  // lista vem limitada aos mais recentes; o total diz quantos há no histórico.
+  const totalBanco = resposta.total == null ? cenarios.length : resposta.total;
   const parametros = resposta.parametros || {};
   const gatilho = parametros.gatilho != null ? parametros.gatilho : 5;
 
@@ -199,7 +202,10 @@ export async function telaCenarios(el, ctx) {
         ${visiveis.map((c) => cartao(c, codigoPorId, { podeCriar, motivoCriar, podeSalvar, motivoSalvar })).join('')}
       </div>
       <div class="texto-mini" style="margin-top:10px;">
-        Exibindo ${visiveis.length} de ${cenarios.length} cenário(s).
+        Exibindo ${visiveis.length} de ${cenarios.length} cenário(s)${
+          totalBanco > cenarios.length
+            ? ` — os ${cenarios.length} mais recentes de ${totalBanco} no histórico (RNF-01)`
+            : ''}.
       </div>`;
     ligarAcoes(lista, ctx, recarregarTela);
   }
