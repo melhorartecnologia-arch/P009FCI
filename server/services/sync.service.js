@@ -198,12 +198,27 @@ async function sincronizar(fonteId, { disparo = 'manual', usuarioId = null } = {
 // ---------------------------------------------------------------------------
 // RF-093 — Agendamento por frequência (manual | 15min | horaria | diaria)
 // ---------------------------------------------------------------------------
+const HORA_PADRAO = '06:00';
+
+/** Horário diário aceito: HH:MM em 24 horas. Usado pela rota e pelo agendador. */
+function horaValida(valor) {
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test(String(valor == null ? '' : valor).trim());
+}
+
 function cronDe(fonte) {
   switch (fonte.sync_freq) {
     case '15min': return '*/15 * * * *';
     case 'horaria': return '0 * * * *';
     case 'diaria': {
-      const [h, m] = String(fonte.sync_hora || '06:00').split(':').map((x) => parseInt(x, 10) || 0);
+      // Um horário fora do formato nunca pode virar expressão cron: interpolar
+      // «undefined» derruba o node-cron e, com ele, a gravação da fonte e a
+      // própria partida da aplicação. Fora do formato, cai no padrão.
+      const bruto = String(fonte.sync_hora || '').trim();
+      const usado = horaValida(bruto) ? bruto : HORA_PADRAO;
+      if (bruto && !horaValida(bruto)) {
+        console.warn(`[sync] fonte ${fonte.codigo || fonte.id}: horário «${bruto}» fora do formato HH:MM — agendando às ${HORA_PADRAO}.`);
+      }
+      const [h, m] = usado.split(':').map((x) => parseInt(x, 10));
       return `${m} ${h} * * *`;
     }
     default: return null;
@@ -233,10 +248,22 @@ async function reagendarFonte(fonte) {
   tarefasAgendadas.set(fonte.id, task);
 }
 
+/**
+ * RF-093 · RNF-07 — uma fonte com agendamento inválido não pode impedir a
+ * partida da aplicação: o erro é registrado e as demais seguem agendadas.
+ */
 async function iniciarAgendador() {
   const { rows } = await query('SELECT * FROM fontes_dados WHERE sync_ativa = TRUE');
-  for (const fonte of rows) await reagendarFonte(fonte);
-  return rows.length;
+  let agendadas = 0;
+  for (const fonte of rows) {
+    try {
+      await reagendarFonte(fonte);
+      agendadas += 1;
+    } catch (err) {
+      console.error(`[sync] fonte ${fonte.codigo || fonte.id} não pôde ser agendada: ${err.message}`);
+    }
+  }
+  return agendadas;
 }
 
 function pararAgendador() {
@@ -245,6 +272,9 @@ function pararAgendador() {
 }
 
 module.exports = {
+  horaValida,
+  HORA_PADRAO,
+  cronDe,
   carregarFonte,
   mapeamentosDe,
   testarConexao,

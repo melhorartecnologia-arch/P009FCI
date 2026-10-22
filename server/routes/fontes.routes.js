@@ -82,12 +82,36 @@ router.get('/staging/resumo', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+/**
+ * RF-093 — tenta agendar a fonte e devolve o aviso quando não for possível.
+ * A gravação já aconteceu; o agendamento é efeito colateral e não pode
+ * invalidá-la nem deixar a interface num estado sem saída.
+ */
+async function agendarSemDerrubar(fonte) {
+  try {
+    await sync.reagendarFonte(fonte);
+    return null;
+  } catch (err) {
+    console.error(`[fontes] falha ao agendar a fonte ${fonte.codigo || fonte.id}: ${err.message}`);
+    return `A fonte foi salva, mas a sincronização programada não pôde ser agendada: ${err.message}. `
+         + 'Revise a frequência e o horário.';
+  }
+}
+
 function validarCorpo(body) {
   const erros = [];
   if (!body.nome || !String(body.nome).trim()) erros.push('Nome é obrigatório.');
   if (!body.conector) erros.push('Conector é obrigatório.');
   if (body.porta != null && body.porta !== '' && !(Number(body.porta) > 0 && Number(body.porta) < 65536)) {
     erros.push('Porta inválida.');
+  }
+  // RF-093 — o horário vira expressão cron: recusar aqui evita gravar uma fonte
+  // que o agendador não consegue programar.
+  if (String(body.syncFreq || '') === 'diaria') {
+    const hora = String(body.syncHora == null ? '' : body.syncHora).trim();
+    if (hora && !sync.horaValida(hora)) {
+      erros.push(`Horário inválido: «${hora}». Informe no formato HH:MM, de 00:00 a 23:59.`);
+    }
   }
   return erros;
 }
@@ -113,8 +137,11 @@ router.post('/', exigirAcao('integracoes'), async (req, res, next) => {
         b.syncFreq || 'manual', b.syncHora || '06:00', !!b.syncAtiva,
       ]
     );
-    await sync.reagendarFonte(rows[0]);
-    res.status(201).json({ fonte: publicar(rows[0], req.usuario) });
+    // A fonte já está gravada: uma falha de agendamento é registrada e
+    // reportada no corpo, nunca transformada em erro que esconde o sucesso da
+    // persistência e deixa a tela sem caminho de saída.
+    const avisoAgenda = await agendarSemDerrubar(rows[0]);
+    res.status(201).json({ fonte: publicar(rows[0], req.usuario), ...(avisoAgenda ? { aviso: avisoAgenda } : {}) });
   } catch (err) {
     if (err.code === '23505') return res.status(409).json({ erro: 'Já existe uma fonte com esse código.' });
     next(err);
@@ -146,8 +173,11 @@ router.put('/:id', exigirAcao('integracoes'), async (req, res, next) => {
         b.syncAtiva != null ? !!b.syncAtiva : atual.sync_ativa,
       ]
     );
-    await sync.reagendarFonte(rows[0]);
-    res.json({ fonte: publicar(rows[0], req.usuario) });
+    // A fonte já está gravada: uma falha de agendamento é registrada e
+    // reportada no corpo, nunca transformada em erro que esconde o sucesso da
+    // persistência e deixa a tela sem caminho de saída.
+    const avisoAgenda = await agendarSemDerrubar(rows[0]);
+    res.json({ fonte: publicar(rows[0], req.usuario), ...(avisoAgenda ? { aviso: avisoAgenda } : {}) });
   } catch (err) { next(err); }
 });
 

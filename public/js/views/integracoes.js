@@ -191,7 +191,7 @@ function modalFonte(ctx, conectores, fonte, aoSalvar) {
             <option value="diaria" ${(f.syncFreq || 'diaria') === 'diaria' ? 'selected' : ''}>Diária</option>
           </select>
         </div>
-        <div class="campo"><span>HORÁRIO (SE DIÁRIA)</span><input id="f-hora" class="mono" value="${esc(f.syncHora || '06:00')}" placeholder="06:00"></div>
+        <div class="campo"><span>HORÁRIO (SE DIÁRIA)</span><input type="time" id="f-hora" class="mono" value="${esc(f.syncHora || '06:00')}" placeholder="06:00"></div>
         <div class="campo"><span>AGENDAMENTO</span>
           <select id="f-ativa"><option value="true" ${f.syncAtiva !== false ? 'selected' : ''}>Ativo</option><option value="false" ${f.syncAtiva === false ? 'selected' : ''}>Desativado</option></select>
         </div>

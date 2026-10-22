@@ -616,3 +616,47 @@ test('RF-055 — cotação inválida na alternativa é recusada com a mesma regr
     { base: ref, nome: 'Moeda inexistente', moeda: 'XYZ', cotacao: 3 }, tokens.custos);
   assert.strictEqual(moeda.status, 422, JSON.stringify(moeda.json));
 });
+
+/* ============================================= Agendamento da sincronização RF-093 */
+
+test('RF-093 — horário fora do formato HH:MM é recusado e nada é gravado', async () => {
+  const antes = await req('GET', '/fontes', undefined, tokens.ti);
+  const n = antes.json.fontes.length;
+
+  for (const hora of ['6', '0600', 'abc', '25:00', '12:60']) {
+    const r = await req('POST', '/fontes',
+      { nome: `Fonte ${hora}`, conector: 'postgres', syncFreq: 'diaria', syncHora: hora, syncAtiva: true },
+      tokens.ti);
+    assert.strictEqual(r.status, 422, `horário «${hora}» deveria ser recusado: ${JSON.stringify(r.json)}`);
+    const msg = r.json.erro || (r.json.erros || []).join(' ');
+    assert.match(msg, /HH:MM/, 'a mensagem orienta o formato, em português (RNF-03)');
+  }
+
+  // o horário vira expressão cron: recusar na entrada evita gravar uma fonte
+  // que o agendador não consegue programar e que derrubaria a partida (RNF-07)
+  const depois = await req('GET', '/fontes', undefined, tokens.ti);
+  assert.strictEqual(depois.json.fontes.length, n, 'nenhuma fonte inválida foi persistida');
+});
+
+test('RF-093 — horário válido agenda a sincronização diária', async () => {
+  const r = await req('POST', '/fontes',
+    { nome: 'Fonte agendada', conector: 'postgres', syncFreq: 'diaria', syncHora: '07:15', syncAtiva: true },
+    tokens.ti);
+  assert.strictEqual(r.status, 201, JSON.stringify(r.json));
+  assert.match(r.json.fonte.freqDescricao, /07:15/);
+  assert.ok(!r.json.aviso, 'agendamento sem aviso de falha');
+  await req('DELETE', `/fontes/${r.json.fonte.id}`, undefined, tokens.ti);
+});
+
+test('RNF-07 — horário corrompido no banco não impede a partida do agendador', async () => {
+  const sync = require('../server/services/sync.service');
+  // Expressão cron nunca pode conter «undefined»: era o que derrubava o boot.
+  for (const hora of ['6', '0600', 'abc', '', null, '25:00']) {
+    const expr = sync.cronDe({ sync_freq: 'diaria', sync_hora: hora });
+    assert.ok(!/undefined|NaN/.test(String(expr)), `cron inválido para «${hora}»: ${expr}`);
+    assert.match(expr, /^\d+ \d+ \* \* \*$/);
+  }
+  assert.strictEqual(sync.cronDe({ sync_freq: 'diaria', sync_hora: '07:15' }), '15 7 * * *');
+  assert.strictEqual(sync.cronDe({ sync_freq: '15min' }), '*/15 * * * *');
+  assert.strictEqual(sync.cronDe({ sync_freq: 'manual' }), null);
+});
