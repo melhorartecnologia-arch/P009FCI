@@ -1637,10 +1637,9 @@ function abaVolumes(S, host) {
       ? { ...s, [campo]: valor }
       : { ...s }));
     S.aplicar({
-      chamada: () => S.ctx.api.put(`/cenarios/${S.id}/sim/saidas`, {
-        prodId: S.prodId, uf, campo, valor, volume: campo === 'volume' ? valor : undefined,
-        preco: campo === 'preco' ? valor : undefined, saidas,
-      }),
+      // a rota consome a lista completa de saídas; enviar também uf/campo/valor
+      // soltos sugeria um contrato que o servidor não tem
+      chamada: () => S.ctx.api.put(`/cenarios/${S.id}/sim/saidas`, { prodId: S.prodId, saidas }),
       ok: `${campo === 'volume' ? 'Volume' : 'Preço líquido'} de ${uf} atualizado — denominador e CI% recalculados (RF-068).`,
     });
   }));

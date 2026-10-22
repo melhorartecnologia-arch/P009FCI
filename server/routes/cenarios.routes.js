@@ -123,7 +123,8 @@ router.post('/:id/recarregar', exigirAcao('salvar'), async (req, res, next) => {
 /** RF-003 — duplicar como nova versão, preservando o cenário de origem. */
 router.post('/:id/duplicar', exigirAcao('criarCenario'), async (req, res, next) => {
   try {
-    const cenario = await cenarioService.duplicarCenario(req.params.id, req.usuario, req.body && req.body.nome);
+    const corpo = req.body || {};
+    const cenario = await cenarioService.duplicarCenario(req.params.id, req.usuario, corpo.nome, corpo.resumo);
     res.status(201).json({ cenario });
   } catch (err) { next(err); }
 });

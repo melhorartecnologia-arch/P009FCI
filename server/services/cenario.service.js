@@ -122,7 +122,7 @@ async function mudarStatus(id, status, usuario) {
 }
 
 /** RF-003 (RC-002) — duplica como nova versão sem alterar o cenário de origem. */
-async function duplicarCenario(id, usuario, nomeNovo) {
+async function duplicarCenario(id, usuario, nomeNovo, motivo) {
   const origem = await obterCenario(id);
   const cenario = await transacao(async (client) => {
     const codigo = await proximoCodigo(client);
@@ -145,6 +145,9 @@ async function duplicarCenario(id, usuario, nomeNovo) {
   });
   await eventoCenario(cenario.id, usuario, 'duplicacao', {
     origem: origem.codigo, versao: cenario.versao,
+    // RNF-04 — o motivo informado pela tela entra na trilha; sem ele a
+    // duplicação de um cenário congelado (RN-10) ficaria sem justificativa.
+    ...(motivo ? { resumo: String(motivo).slice(0, 400) } : {}),
   });
   return cenario;
 }
