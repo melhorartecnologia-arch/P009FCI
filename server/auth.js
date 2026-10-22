@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { config } = require('./config');
 const { query } = require('./db');
-const { pode, permissoesDe } = require('./permissions');
+const { pode, permissoesDe, rotuloAcao, AREAS, PERMS, ACOES_ADMIN } = require('./permissions');
 
 function gerarToken(usuario) {
   return jwt.sign(
@@ -37,6 +37,7 @@ function exigirLogin(req, res, next) {
       nome: payload.nome,
       area: payload.area,
       is_admin: !!payload.is_admin,
+      perfil: permissoesDe(payload.area).perfil,
     };
     next();
   } catch (err) {
@@ -45,30 +46,45 @@ function exigirLogin(req, res, next) {
 }
 
 /**
- * Middleware: exige uma ação da matriz de permissões (RF-100).
- * Leitura permanece liberada nas rotas GET — a restrição indica o motivo.
+ * Mensagem de impedimento apresentada ao perfil sem permissão (RF-035 · RF-100).
+ * Declara o perfil ativo, a ação restrita e quais áreas a executam.
+ */
+function montarImpedimento(usuario, acao) {
+  const p = permissoesDe(usuario.area);
+  const habilitadas = AREAS.filter((a) => PERMS[a] && PERMS[a].acoes.includes(acao));
+  const quem = ACOES_ADMIN.includes(acao)
+    ? 'o perfil Administrador (TI)'
+    : (habilitadas.length ? habilitadas.join(', ') : 'nenhuma área configurada');
+  return `Ação restrita: «${rotuloAcao(acao)}» não está habilitada para o perfil ${p.perfil} · ${usuario.area}. ` +
+         `Esta ação pertence a: ${quem}. O acesso de consulta permanece liberado.`;
+}
+
+/**
+ * Middleware: exige uma capacidade da matriz de permissões (RF-035 · RF-100).
+ * A leitura (GET) permanece liberada nas rotas; a restrição informa o motivo.
  */
 function exigirAcao(acao) {
   return (req, res, next) => {
     if (pode(req.usuario, acao)) return next();
     return res.status(403).json({
-      erro: `Ação restrita. Seu perfil (${permissoesDe(req.usuario.area).perfil} · ${req.usuario.area}) tem acesso de consulta; a edição de ${rotuloAcao(acao)} é do perfil Administrador (TI).`,
+      erro: montarImpedimento(req.usuario, acao),
       acao,
+      rotulo: rotuloAcao(acao),
+      perfil: permissoesDe(req.usuario.area).perfil,
       somenteLeitura: true,
     });
   };
 }
 
-function rotuloAcao(acao) {
-  const mapa = {
-    integracoes: 'integrações e fontes de dados',
-    parametros: 'parâmetros mestres',
-    usuarios: 'usuários e perfis',
-    criarCenario: 'cenários',
-    salvar: 'cenários',
-    congelar: 'congelamento de cenários',
+/** Exige qualquer uma das capacidades informadas. */
+function exigirAlguma(...acoes) {
+  return (req, res, next) => {
+    if (acoes.some((a) => pode(req.usuario, a))) return next();
+    return res.status(403).json({
+      erro: montarImpedimento(req.usuario, acoes[0]),
+      acao: acoes[0], somenteLeitura: true,
+    });
   };
-  return mapa[acao] || acao;
 }
 
-module.exports = { gerarToken, autenticar, exigirLogin, exigirAcao };
+module.exports = { gerarToken, autenticar, exigirLogin, exigirAcao, exigirAlguma, montarImpedimento };

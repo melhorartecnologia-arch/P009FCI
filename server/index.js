@@ -3,10 +3,12 @@ const { config, exigirSegredos } = require('./config');
 const { criarApp } = require('./app');
 const { pool } = require('./db');
 const sync = require('./services/sync.service');
+const { initEngine } = require('./engine');
 
 async function main() {
   exigirSegredos();
   await pool.query('SELECT 1'); // valida conexão com o PostgreSQL local
+  await initEngine();          // carrega o motor compartilhado (shared/engine.mjs)
 
   const app = criarApp();
   const server = app.listen(config.porta, () => {

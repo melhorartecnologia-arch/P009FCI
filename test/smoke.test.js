@@ -7,11 +7,13 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert');
 const { criarApp } = require('../server/app');
+const { initEngine } = require('../server/engine');
 const { pool } = require('../server/db');
 
 let server, base;
 
 before(async () => {
+  await initEngine();          // o motor compartilhado é carregado no boot
   const app = criarApp();
   await new Promise((res) => { server = app.listen(0, '127.0.0.1', res); });
   base = `http://127.0.0.1:${server.address().port}`;
@@ -170,7 +172,8 @@ test('RF-007 · isolamento: editar um cenário não altera outro', async () => {
 test('RN-10 · cenário congelado bloqueia edição e exige nova versão', async () => {
   const token = await login('controladoria@cci.local');
   const c = (await chamada('POST', '/cenarios', { nome: 'Congelado Teste' }, token)).json.cenario;
-  await chamada('PUT', `/cenarios/${c.id}/status`, { status: 'congelado' }, token);
+  const cong = await chamada('POST', `/cenarios/${c.id}/gov/congelar`, {}, token);
+  assert.strictEqual(cong.status, 200, JSON.stringify(cong.json));
   const upd = await chamada('PUT', `/cenarios/${c.id}/dados`, { dados: c.dados }, token);
   assert.strictEqual(upd.status, 409);
   const dup = await chamada('POST', `/cenarios/${c.id}/duplicar`, {}, token);

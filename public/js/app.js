@@ -1,54 +1,79 @@
 /**
- * Simulador FCI — SPA em JavaScript puro (sem build).
- * Shell + roteador; telas em /js/views.
+ * Simulador FCI — SPA em JavaScript puro (ESM, sem build).
+ * Casca da aplicação: navegação, contexto compartilhado e utilidades de tela.
  */
 import { api, usuarioAtual, limparSessao } from './api.js';
 import { esc, iniciais } from './format.js';
 import { telaLogin } from './views/login.js';
 import { telaCenarios } from './views/cenarios.js';
 import { telaSimulacao } from './views/simulacao.js';
+import { telaComparacao } from './views/comparacao.js';
+import { telaAlertas } from './views/alertas.js';
+import { telaRelatorio } from './views/relatorio.js';
 import { telaIntegracoes } from './views/integracoes.js';
 import { telaParametros } from './views/parametros.js';
-import { telaAlertas } from './views/alertas.js';
-import { telaComparacao } from './views/comparacao.js';
 import { telaUsuarios } from './views/usuarios.js';
+import { telaPermissoes } from './views/permissoes.js';
 
 const appEl = document.getElementById('app');
 
 const ROTAS = [
-  { padrao: /^#\/cenarios$/,        vista: telaCenarios,   nav: 'cenarios' },
-  { padrao: /^#\/sim\/([^/]+)$/,    vista: telaSimulacao,  nav: 'sim' },
-  { padrao: /^#\/comparar$/,        vista: telaComparacao, nav: 'comparar' },
-  { padrao: /^#\/alertas$/,         vista: telaAlertas,    nav: 'alertas' },
-  { padrao: /^#\/integracoes$/,     vista: telaIntegracoes,nav: 'integracoes' },
-  { padrao: /^#\/parametros$/,      vista: telaParametros, nav: 'parametros' },
-  { padrao: /^#\/usuarios$/,        vista: telaUsuarios,   nav: 'usuarios' },
+  { padrao: /^#\/cenarios$/,                vista: telaCenarios,    nav: 'cenarios' },
+  { padrao: /^#\/sim\/([^/]+)(?:\/([^/]+))?$/, vista: telaSimulacao, nav: 'sim' },
+  { padrao: /^#\/comparar$/,                vista: telaComparacao,  nav: 'comparar' },
+  { padrao: /^#\/alertas$/,                 vista: telaAlertas,     nav: 'alertas' },
+  { padrao: /^#\/relatorio\/([^/]+)$/,      vista: telaRelatorio,   nav: 'relatorio' },
+  { padrao: /^#\/integracoes$/,             vista: telaIntegracoes, nav: 'integracoes' },
+  { padrao: /^#\/parametros$/,              vista: telaParametros,  nav: 'parametros' },
+  { padrao: /^#\/permissoes$/,              vista: telaPermissoes,  nav: 'permissoes' },
+  { padrao: /^#\/usuarios$/,                vista: telaUsuarios,    nav: 'usuarios' },
 ];
 
+/* ---------------------------------------------------------------- toasts */
 export function toast(mensagem, tipo = '') {
   const box = document.getElementById('toasts');
   const el = document.createElement('div');
   el.className = `toast ${tipo}`;
   el.textContent = mensagem;
   box.appendChild(el);
-  setTimeout(() => el.remove(), tipo === 'erro' ? 7000 : 4200);
+  setTimeout(() => el.remove(), tipo === 'erro' ? 8000 : 4500);
 }
 
-export function abrirModal(html) {
+/* ---------------------------------------------------------------- modais */
+export function abrirModal(html, opcoes = {}) {
   fecharModal();
   const wrap = document.createElement('div');
   wrap.className = 'modal-fundo';
   wrap.id = 'modal-ativo';
-  wrap.innerHTML = `<div class="modal">${html}</div>`;
-  wrap.addEventListener('mousedown', (e) => { if (e.target === wrap) fecharModal(); });
+  wrap.innerHTML = `<div class="modal ${opcoes.largo ? 'largo' : ''}">${html}</div>`;
+  wrap.addEventListener('mousedown', (e) => { if (e.target === wrap && !opcoes.fixo) fecharModal(); });
   document.body.appendChild(wrap);
+  document.addEventListener('keydown', escFecha);
   return wrap;
 }
+function escFecha(e) { if (e.key === 'Escape') fecharModal(); }
 export function fecharModal() {
   const m = document.getElementById('modal-ativo');
   if (m) m.remove();
+  document.removeEventListener('keydown', escFecha);
 }
 
+/* -------------------------------------------------------- painel lateral */
+export function abrirPainel(html) {
+  fecharPainel();
+  const el = document.createElement('aside');
+  el.className = 'painel-lateral';
+  el.id = 'painel-ativo';
+  el.innerHTML = html;
+  document.body.appendChild(el);
+  return el;
+}
+export function fecharPainel() {
+  const p = document.getElementById('painel-ativo');
+  if (p) p.remove();
+}
+
+/* ------------------------------------------------------------- navegação */
 function navegar(hash) { window.location.hash = hash; }
 
 function shell(usuario, navAtiva, alertCount) {
@@ -73,9 +98,11 @@ function shell(usuario, navAtiva, alertCount) {
         ${item('sim', '#/cenarios', '⚗', 'Simulação')}
         ${item('comparar', '#/comparar', '⇆', 'Comparação')}
         ${item('alertas', '#/alertas', '🔔', 'Alertas', alertCount ? `<span class="badge err">${alertCount}</span>` : '')}
+        ${item('relatorio', '#/cenarios', '📄', 'Relatório')}
         <div class="nav-secao">DADOS MESTRES</div>
         ${item('integracoes', '#/integracoes', '🗄', 'Integrações')}
         ${item('parametros', '#/parametros', '⚙', 'Parâmetros')}
+        ${item('permissoes', '#/permissoes', '🔑', 'Permissões')}
         ${admin ? item('usuarios', '#/usuarios', '👥', 'Usuários') : ''}
       </nav>
       <div class="sidebar-rodape">
@@ -114,13 +141,24 @@ let alertCountCache = 0;
 export function definirAlertas(n) {
   if (n === alertCountCache) return;
   alertCountCache = n;
-  renderizar();
+  const sino = document.querySelector('.sino');
+  const navBadge = document.querySelector('.nav-item.ativo .badge, .nav-item .badge.err');
+  if (sino) sino.innerHTML = '🔔' + (n ? `<span class="badge">${n}</span>` : '');
+  if (navBadge) { if (n) navBadge.textContent = n; else navBadge.remove(); }
+}
+
+/** Capacidade do perfil ativo na matriz de permissões (RF-035 · RF-039). */
+function pode(acao) {
+  const u = usuarioAtual();
+  if (!u) return false;
+  if (u.is_admin && ['integracoes', 'parametros', 'usuarios'].includes(acao)) return true;
+  return (u.acoes || []).includes(acao);
 }
 
 const ctx = {
-  api, navegar, toast, abrirModal, fecharModal, definirTopo,
+  api, navegar, toast, abrirModal, fecharModal, abrirPainel, fecharPainel,
+  definirTopo, definirAlertas, pode,
   get usuario() { return usuarioAtual(); },
-  definirAlertas,
 };
 
 async function renderizar() {
@@ -134,7 +172,7 @@ async function renderizar() {
   }
 
   const rota = ROTAS.find((r) => r.padrao.test(hash)) || ROTAS[0];
-  const params = hash.match(rota.padrao) || [];
+  const params = (hash.match(rota.padrao) || []).slice(1);
 
   appEl.innerHTML = shell(usuario, rota.nav, alertCountCache);
   appEl.querySelectorAll('[data-hash]').forEach((el) => {
@@ -146,13 +184,16 @@ async function renderizar() {
   });
 
   const conteudo = document.getElementById('conteudo');
+  conteudo.innerHTML = '<div class="carregando">Carregando</div>';
   try {
-    await rota.vista(conteudo, ctx, params.slice(1));
+    await rota.vista(conteudo, ctx, params);
   } catch (err) {
-    conteudo.innerHTML = `<div class="pagina"><div class="aviso-erro"><span>✕</span><div><b>Não foi possível carregar a tela.</b> ${esc(err.message)}</div></div></div>`;
+    console.error(err);
+    conteudo.innerHTML = `<div class="pagina"><div class="aviso-erro"><span>✕</span>
+      <div><b>Não foi possível carregar a tela.</b> ${esc(err.message)}</div></div></div>`;
   }
 }
 
-window.addEventListener('hashchange', renderizar);
+window.addEventListener('hashchange', () => { fecharPainel(); fecharModal(); renderizar(); });
 if (!window.location.hash) window.location.hash = '#/cenarios';
 renderizar();

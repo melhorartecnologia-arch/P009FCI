@@ -1,114 +1,121 @@
 # Simulador FCI · Cervejaria Cidade Imperial
 
-Aplicação web para criação, alteração e comparação de **cenários de conteúdo de
-importação (CI%)** dos produtos — apoio às decisões de Compras, Custos, Pricing,
-Fiscal e Controladoria. Ambiente **analítico e sem validade fiscal**: não gera,
-não assina e não transmite a FCI oficial, e não altera cadastros do Protheus
-(RN-12 · D-01).
+Aplicação web para **criação, alteração e comparação de cenários de Conteúdo de
+Importação (CI%)** dos produtos — apoio às decisões de Compras, Custos, Pricing,
+Fiscal/Tributário, Industrial e Controladoria.
 
-> **Entrega atual: Semana 1 do cronograma (14/09 → 18/09) — Fundação de dados,
-> parâmetros e cenário.** Requisitos com entrega até 17/09 implementados e
-> testados; RF-002 e RF-100 (18/09) incluídos. Detalhe em
-> [`docs/ESCOPO_S1.md`](docs/ESCOPO_S1.md).
+> **Ambiente analítico, sem validade fiscal.** Não gera, não assina e não
+> transmite a Ficha de Conteúdo de Importação oficial, não constitui apuração
+> tributária e não altera cadastros do Protheus (RN-12 · D-01 · seção "Fora de
+> escopo" dos documentos de requisitos).
+
+## Escopo implementado
+
+**Os 100 requisitos funcionais (RF-001 a RF-100), as 12 regras de negócio
+(RN-01 a RN-12) e os 10 requisitos não funcionais (RNF-01 a RNF-10)** da
+Especificação de Requisitos de Software v1.0, equalizada com o Documento
+Consolidado REV06.
+
+| Bloco da ERS | Requisitos | Onde usar |
+| --- | --- | --- |
+| 6.1 Gestão de cenários e governança | RF-001 a RF-009 | Cenários · Simulação ▸ Governança |
+| 6.2 Estrutura do produto | RF-010 a RF-014 | Simulação ▸ Estrutura |
+| 6.3 Substituição de componentes | RF-015 a RF-024 | Simulação ▸ Estrutura (assistente ⇄) |
+| 6.4 Validadores da estrutura | RF-025 a RF-033 | Simulação ▸ Validação |
+| 6.5 Alterações avançadas e perfis | RF-034 a RF-039 | Simulação ▸ Governança · Permissões |
+| 6.6 Alterações em massa | RF-040 a RF-045 | Simulação ▸ Alterações em massa |
+| 6.7 Origem e conteúdo de importação | RF-046 a RF-051 | Simulação ▸ Origem e conteúdo |
+| 6.8 Simulação cambial | RF-052 a RF-055 | Simulação ▸ Câmbio |
+| 6.9 Cálculo do CI% e recálculo imediato | RF-056 a RF-065 | Simulação ▸ Cálculo |
+| 6.10 Volumes, preços e destinos | RF-066 a RF-072 | Simulação ▸ Volumes e destinos |
+| 6.11 Comparação de cenários | RF-073 a RF-082 | Comparação (matriz, drill-down, análise assistida) |
+| 6.12 Alertas e relatório | RF-083 a RF-089 | Alertas · Relatório |
+| 6.13 Dados mestres e integrações | RF-090 a RF-100 | Integrações · Parâmetros · Permissões |
+
+Documentos do projeto:
+- [`docs/MANUAL_USUARIO.pdf`](docs/MANUAL_USUARIO.pdf) — **manual do usuário**: passo a passo de
+  todas as telas, com 18 capturas da aplicação (fonte em `docs/manual/manual.html`)
+- [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md) — modelo de dados, motor e contrato da API
+- [`docs/RASTREABILIDADE.md`](docs/RASTREABILIDADE.md) — matriz requisito × implementação × teste
+- [`docs/DEPLOY_LIGHTSAIL.md`](docs/DEPLOY_LIGHTSAIL.md) · [`docs/DEPLOY_VPS.md`](docs/DEPLOY_VPS.md) — instalação
 
 ## Stack
 
-- **100% Node.js + JavaScript** (backend Express, frontend SPA em JS puro sem build)
-- **PostgreSQL na mesma instância** (VPS AWS Ubuntu) — schema `fci` da aplicação
-  e schema `erp_demo` de demonstração das origens
-- Conectores de integração **abstratos e configuráveis pelo administrador**:
-  `postgres` · `oracle` (Protheus, modo thin 100% JS) · `mssql` (Portal de
-  Custos) · `mysql` · `rest` (APIs/BACEN PTAX) · `arquivo` (JSON/CSV para carga
-  complementar)
-- Interface fiel ao protótipo aprovado no discovery (handoff Claude Design em
-  [`docs/prototipo/`](docs/prototipo/))
+- **100% Node.js + JavaScript**: Express no servidor, SPA em JavaScript puro
+  (ESM, sem build, sem framework) no navegador.
+- **PostgreSQL na mesma instância** da aplicação (VPS AWS Ubuntu/Lightsail).
+- **Motor único compartilhado** (`shared/engine.mjs`): a mesma regra de cálculo,
+  substituição e validação roda no navegador (prévia em tempo real) e no
+  servidor (gravação e bloqueios) — garante aderência da fórmula (RNF-10).
+- **Integrações configuráveis pelo administrador** com conector abstrato:
+  PostgreSQL · Oracle (Protheus, modo *thin*) · SQL Server · MySQL · REST · arquivo.
+- **Sem etapa de compilação**: todas as dependências são JavaScript puro ou
+  trazem binários pré-compilados.
 
-## Como executar (desenvolvimento)
+## Execução local
 
 ```bash
-# 1. PostgreSQL local com a base criada
 createdb fci_simulador
-
-# 2. Configuração
-cp .env.example .env        # preencha PG* e gere FCI_SECRET_KEY / FCI_JWT_SECRET
-                            # (openssl rand -hex 32)
-
-# 3. Dependências, schema e dados de demonstração
+cp .env.example .env          # preencha PG* e gere FCI_SECRET_KEY / FCI_JWT_SECRET
 npm install
-npm run setup               # migrate + seed (usuários, parâmetros, fontes, 1ª sincronização)
-
-# 4. Subir
-npm start                   # http://127.0.0.1:3000
-npm test                    # testes de fumaça dos critérios de aceite da S1
+npm run setup                 # migrações + carga de demonstração + 1ª sincronização
+npm start                     # http://127.0.0.1:3000
+npm test                      # regras de negócio + API + fumaça
 ```
 
 ### Usuários criados pelo seed
 
-| Perfil | E-mail | Área |
-| --- | --- | --- |
-| **Administrador** | `ti@cci.local` | TI — edita integrações, parâmetros e usuários |
-| Simulador | `custos@cci.local` | Custos — cria cenários e simula |
-| Validador | `controladoria@cci.local` | Controladoria — congela e consolida |
-| Simulador | `fiscal@cci.local` · `pricing@cci.local` · `compras@cci.local` | consulta/simulação |
-| Especialista | `industrial@cci.local` · `pcp@cci.local` | estrutura (S5) |
-| Validador / Aprovador | `sgi@cci.local` · `negocio@cci.local` | validação técnica (S5) |
-
 Senha inicial de todos: valor de `SEED_SENHA` no `.env` (padrão `cci@2026`) —
 **troque no primeiro acesso** (tela Usuários, perfil TI).
 
-## Deploy na VPS (AWS Ubuntu — aplicação + PostgreSQL na mesma instância)
+| E-mail | Área | Perfil | Atribuição |
+| --- | --- | --- | --- |
+| `ti@cci.local` | TI | Administrador | Integrações, fontes de dados e parâmetros mestres |
+| `custos@cci.local` | Custos | Simulador | Abre cenários, define premissas, calcula e consolida |
+| `controladoria@cci.local` | Controladoria | Validador | Valida, aprova, congela e define a base do denominador |
+| `fiscal@cci.local` | Fiscal | Simulador | Origem, CST, conteúdo, enquadramento e reemissão |
+| `pricing@cci.local` | Pricing | Simulador | Preço de saída, volumes e mix de UF |
+| `compras@cci.local` | Compras | Simulador | Fornecedor, FOB, frete, seguro, contratos e moeda |
+| `industrial@cci.local` · `pcp@cci.local` | Industrial · PCP | Especialista | Estrutura e receita em modo avançado; validação técnica |
+| `sgi@cci.local` | SGI/CGI | Validador | Validação técnica da estrutura e aprovação |
+| `negocio@cci.local` | Negócio | Aprovador | Aprova e consolida para decisão executiva |
+
+## Instalação na VPS
 
 ```bash
-git clone <este-repositório> && cd P009FCI
+git clone <repositório> && cd P009FCI
 sudo bash scripts/install-vps.sh
 ```
 
-O script instala Node 20 + PostgreSQL, cria papel/base `fci_app`/`fci_simulador`,
-gera o `.env` com segredos, aplica migrações + seed e registra o serviço
-systemd `fci-simulador`. **Nada é compilado** — Node por pacote binário,
-frontend sem build e dependências npm puras/pré-compiladas.
+Instala Node 20 e PostgreSQL por pacote binário, cria papel e base, gera o
+`.env` com segredos, aplica migrações e seed e registra o serviço systemd
+`fci-simulador`. Passo a passo completo do AWS Lightsail (instância, IP
+estático, firewall, Nginx, HTTPS) em [`docs/DEPLOY_LIGHTSAIL.md`](docs/DEPLOY_LIGHTSAIL.md).
 
-- **AWS Lightsail** (passo a passo completo: instância, IP estático,
-  firewall, Nginx, HTTPS): [`docs/DEPLOY_LIGHTSAIL.md`](docs/DEPLOY_LIGHTSAIL.md)
-- EC2 / VPS genérica e conexão às origens reais: [`docs/DEPLOY_VPS.md`](docs/DEPLOY_VPS.md)
+## Integrações configuráveis
 
-## Integrações configuráveis (RF-090/RF-091)
+As fontes são cadastradas pelo administrador em **Integrações**: host/endpoint,
+porta, base, usuário e credencial (cifrada em AES-256-GCM, nunca exibida em
+texto claro), conector, frequência de sincronização e o **mapeamento variável →
+tabela · campo** (ex.: `produto.codigo → SB1.B1_COD`, `cst.cst → SD1.D1_CLASFIS`).
 
-As fontes de dados são cadastradas pelo administrador em **Integrações**:
-host/endpoint, porta, base, usuário e credencial (cifrada com AES-256-GCM —
-nunca exibida nem devolvida em texto claro), conector, frequência de
-sincronização e o **mapeamento variável → tabela · campo** (ex.:
-`produto.codigo → SB1.B1_COD`, `cst.cst → SD1.D1_CLASFIS`).
-
-O seed aponta as cinco fontes (ERP Protheus, Portal de Custos, Sistema de
-Preços, Câmbio e Compras) para o schema de demonstração `erp_demo` **na mesma
-instância PostgreSQL** — para ligar nas origens reais basta o administrador
-editar a conexão (ex.: conector `oracle`, host do Protheus) e ajustar o
-mapeamento; nenhuma alteração de código é necessária. A sincronização executa
-somente SELECTs: **nenhuma operação altera os sistemas de origem** (RNF-06), e
-uma falha de integração mantém a última carga válida disponível (RF-095/RNF-07).
+O seed aponta as cinco fontes para o schema de demonstração `erp_demo` na mesma
+instância PostgreSQL. Para ligar nas origens reais o administrador apenas edita
+a conexão (ex.: conector `oracle` com o host do Protheus) e ajusta o mapeamento
+— sem alteração de código. A sincronização executa **somente leitura**: nenhuma
+operação altera os sistemas de origem (RNF-06), e uma falha preserva a última
+carga válida (RF-095 · RNF-07).
 
 ## Estrutura do repositório
 
 ```
-server/            API Express (auth, cenários, fontes, parâmetros, usuários)
-  connectors/      conectores abstratos postgres/oracle/mssql/mysql/rest/arquivo
-  services/        catálogo de variáveis, sincronização, carga da estrutura, cenários
-public/            SPA (js puro): telas Cenários, Simulação, Integrações,
-                   Parâmetros, Alertas, Comparação, Usuários + motor CI% portado
-sql/               001_schema.sql (schema fci) · 002_erp_demo.sql (origens demo)
-scripts/           migrate, seed, install-vps.sh, unit systemd
-test/              testes de fumaça dos critérios de aceite da Semana 1
-docs/              escopo S1, deploy, protótipo de referência (handoff)
+shared/engine.mjs    motor único: cálculo, substituição, validação, comparação,
+                     alertas, relatório e análise assistida
+server/              API Express — serviços por domínio, rotas REST, conectores
+public/              SPA: cenários, simulação (8 abas), comparação, alertas,
+                     relatório, integrações, parâmetros, permissões, usuários
+sql/                 001 schema · 002 ERP de demonstração · 003 escopo completo
+scripts/             migrate · seed · install-vps.sh · unit systemd
+test/                engine (regras de negócio) · api (contrato) · smoke
+docs/                manual, arquitetura, rastreabilidade, deploy, protótipo
 ```
-
-## Roadmap (cronograma de 6 semanas)
-
-| Semana | Período | Entrega | Status |
-| --- | --- | --- | --- |
-| **S1** | 14/09 – 18/09 | Fundação de dados, parâmetros e cenário (RF-001/002/007, RF-090–100) | ✅ **entregue** |
-| S2 | 21/09 – 25/09 | Estrutura, origem e classificação (cascata navegável ✅ prévia) | esqueleto pronto |
-| S3 | 28/09 – 02/10 | Motor CI%, câmbio e denominador (motor portado ✅ prévia) | esqueleto pronto |
-| S4 | 05/10 – 09/10 | Substituição de componentes e recálculo imediato | planejado |
-| S5 | 12/10 – 16/10 | Validadores, perfis e alterações em massa | planejado |
-| S6 | 19/10 – 23/10 | Comparação, alertas, relatório e aceite | planejado |

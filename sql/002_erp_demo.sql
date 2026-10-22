@@ -21,42 +21,45 @@ CREATE TABLE erp_demo.sb1 (
   b1_tipo   TEXT NOT NULL DEFAULT 'MP',
   b1_um     TEXT NOT NULL DEFAULT 'un',
   b1_grupo  TEXT NOT NULL DEFAULT '',
-  b1_posipi TEXT NOT NULL DEFAULT ''
+  b1_posipi TEXT NOT NULL DEFAULT '',
+  b1_conv   NUMERIC NOT NULL DEFAULT 0,      -- volume envasado (especificação do SKU · RF-014)
+  b1_segum  TEXT NOT NULL DEFAULT 'ml',      -- unidade do volume
+  b1_custd  NUMERIC NOT NULL DEFAULT 0       -- mão de obra e custos industriais (RF-012)
 );
 
-INSERT INTO erp_demo.sb1 (b1_cod, b1_desc, b1_origem, b1_tipo, b1_um, b1_grupo, b1_posipi) VALUES
+INSERT INTO erp_demo.sb1 (b1_cod, b1_desc, b1_origem, b1_tipo, b1_um, b1_grupo, b1_posipi, b1_conv, b1_segum, b1_custd) VALUES
   -- Matérias-primas
-  ('MP-1001', 'Malte Pilsen',                              '0', 'MP', 'kg', 'Malte',    '1107.10.10'),
-  ('MP-1002', 'Malte Munich',                              '1', 'MP', 'kg', 'Malte',    '1107.10.10'),
-  ('MP-1005', 'Malte Munich nacional',                     '0', 'MP', 'kg', 'Malte',    '1107.10.10'),
-  ('MP-1007', 'Malte Especial (estrang. merc. interno)',   '2', 'MP', 'kg', 'Malte',    '1107.10.10'),
-  ('MP-1003', 'Lúpulo Cascade',                            '1', 'MP', 'kg', 'Lúpulo',   '1210.20.10'),
-  ('MP-1006', 'Lúpulo Nacional (Vale Europeu)',            '0', 'MP', 'kg', 'Lúpulo',   '1210.20.10'),
-  ('MP-1008', 'Lúpulo Fuggle UK',                          '1', 'MP', 'kg', 'Lúpulo',   '1210.20.10'),
-  ('MP-1004', 'Levedura US-05',                            '1', 'MP', 'kg', 'Levedura', '2102.10.00'),
-  ('MP-1009', 'Levedura Suíça Alpina',                     '1', 'MP', 'kg', 'Levedura', '2102.10.00'),
-  ('MP-2001', 'Água tratada',                              '0', 'MP', 'L',  'Água',     '2201.90.00'),
-  ('MP-3001', 'Lata Alumínio 350ml',                       '3', 'MP', 'un', 'Lata',     '7612.90.19'),
-  ('MP-3002', 'Lata Alumínio 473ml',                       '3', 'MP', 'un', 'Lata',     '7612.90.19'),
-  ('MP-3006', 'Lata Alumínio 473ml · Ball',                '5', 'MP', 'un', 'Lata',     '7612.90.19'),
-  ('MP-3007', 'Lata Alumínio 350ml · faixa declarada',     '3', 'MP', 'un', 'Lata',     '7612.90.19'),
-  ('MP-3003', 'Tampa/Anel Alumínio',                       '5', 'MP', 'un', 'Tampa',    '8309.90.00'),
-  ('MP-3008', 'Tampa/Anel nacional integral',              '0', 'MP', 'un', 'Tampa',    '8309.90.00'),
-  ('MP-4001', 'Rótulo BOPP nacional',                      '0', 'MP', 'un', 'Rótulo',   '4821.10.00'),
-  ('MP-4002', 'Rótulo metalizado',                         '1', 'MP', 'un', 'Rótulo',   '4821.10.00'),
-  ('MP-5001', 'CO2 industrial',                            '0', 'MP', 'kg', 'CO2',      '2811.21.00'),
-  ('MP-3004', 'Garrafa Vidro 500ml',                       '1', 'MP', 'un', 'Garrafa',  '7010.90.21'),
-  ('MP-3005', 'Garrafa PET 1,5L',                          '1', 'MP', 'un', 'Garrafa',  '3923.30.00'),
-  ('MP-6001', 'Cartucho cartão 12un',                      '0', 'MP', 'un', 'Cartucho', '4819.10.00'),
+  ('MP-1001', 'Malte Pilsen',                              '0', 'MP', 'kg', 'Malte',    '1107.10.10', 0, 'ml', 0),
+  ('MP-1002', 'Malte Munich',                              '1', 'MP', 'kg', 'Malte',    '1107.10.10', 0, 'ml', 0),
+  ('MP-1005', 'Malte Munich nacional',                     '0', 'MP', 'kg', 'Malte',    '1107.10.10', 0, 'ml', 0),
+  ('MP-1007', 'Malte Especial (estrang. merc. interno)',   '2', 'MP', 'kg', 'Malte',    '1107.10.10', 0, 'ml', 0),
+  ('MP-1003', 'Lúpulo Cascade',                            '1', 'MP', 'kg', 'Lúpulo',   '1210.20.10', 0, 'ml', 0),
+  ('MP-1006', 'Lúpulo Nacional (Vale Europeu)',            '0', 'MP', 'kg', 'Lúpulo',   '1210.20.10', 0, 'ml', 0),
+  ('MP-1008', 'Lúpulo Fuggle UK',                          '1', 'MP', 'kg', 'Lúpulo',   '1210.20.10', 0, 'ml', 0),
+  ('MP-1004', 'Levedura US-05',                            '1', 'MP', 'kg', 'Levedura', '2102.10.00', 0, 'ml', 0),
+  ('MP-1009', 'Levedura Suíça Alpina',                     '1', 'MP', 'kg', 'Levedura', '2102.10.00', 0, 'ml', 0),
+  ('MP-2001', 'Água tratada',                              '0', 'MP', 'L',  'Água',     '2201.90.00', 0, 'ml', 0),
+  ('MP-3001', 'Lata Alumínio 350ml',                       '3', 'MP', 'un', 'Lata',     '7612.90.19', 0, 'ml', 0),
+  ('MP-3002', 'Lata Alumínio 473ml',                       '3', 'MP', 'un', 'Lata',     '7612.90.19', 0, 'ml', 0),
+  ('MP-3006', 'Lata Alumínio 473ml · Ball',                '5', 'MP', 'un', 'Lata',     '7612.90.19', 0, 'ml', 0),
+  ('MP-3007', 'Lata Alumínio 350ml · faixa declarada',     '3', 'MP', 'un', 'Lata',     '7612.90.19', 0, 'ml', 0),
+  ('MP-3003', 'Tampa/Anel Alumínio',                       '3', 'MP', 'un', 'Tampa',    '8309.90.00', 0, 'ml', 0),
+  ('MP-3008', 'Tampa/Anel nacional integral',              '0', 'MP', 'un', 'Tampa',    '8309.90.00', 0, 'ml', 0),
+  ('MP-4001', 'Rótulo BOPP nacional',                      '0', 'MP', 'un', 'Rótulo',   '4821.10.00', 0, 'ml', 0),
+  ('MP-4002', 'Rótulo metalizado',                         '1', 'MP', 'un', 'Rótulo',   '4821.10.00', 0, 'ml', 0),
+  ('MP-5001', 'CO2 industrial',                            '0', 'MP', 'kg', 'CO2',      '2811.21.00', 0, 'ml', 0),
+  ('MP-3004', 'Garrafa Vidro 500ml',                       '1', 'MP', 'un', 'Garrafa',  '7010.90.21', 0, 'ml', 0),
+  ('MP-3005', 'Garrafa PET 1,5L',                          '1', 'MP', 'un', 'Garrafa',  '3923.30.00', 0, 'ml', 0),
+  ('MP-6001', 'Cartucho cartão 12un',                      '0', 'MP', 'un', 'Cartucho', '4819.10.00', 0, 'ml', 0),
   -- Produtos intermediários
-  ('PI-7001', 'Mosto IPA',                                 '0', 'PI', 'L',  'Mosto',    ''),
-  ('PI-7002', 'Mosto Pilsen',                              '0', 'PI', 'L',  'Mosto',    ''),
+  ('PI-7001', 'Mosto IPA',                                 '0', 'PI', 'L',  'Mosto',    '',           1,    'L',  0.10),
+  ('PI-7002', 'Mosto Pilsen',                              '0', 'PI', 'L',  'Mosto',    '',           1,    'L',  0.10),
   -- Produtos acabados
-  ('PA-9001', 'Cerveja Pilsen Lata 350ml',                 '0', 'PA', 'un', '',         '2203.00.00'),
-  ('PA-9002', 'Cerveja IPA Lata 473ml',                    '0', 'PA', 'un', '',         '2203.00.00'),
-  ('PA-9005', 'Pack 12 · Pilsen Lata 350ml',               '0', 'PA', 'un', '',         '2203.00.00'),
-  ('PA-9003', 'Água Mineral 1,5L',                         '0', 'PA', 'un', '',         '2201.10.00'),
-  ('PA-9004', 'Weiss Ed. Especial 500ml',                  '0', 'PA', 'un', '',         '2203.00.00');
+  ('PA-9001', 'Cerveja Pilsen Lata 350ml',                 '0', 'PA', 'un', '',         '2203.00.00',  350, 'ml', 0.34),
+  ('PA-9002', 'Cerveja IPA Lata 473ml',                    '0', 'PA', 'un', '',         '2203.00.00',  473, 'ml', 0.42),
+  ('PA-9005', 'Pack 12 · Pilsen Lata 350ml',               '0', 'PA', 'un', '',         '2203.00.00', 4200, 'ml', 1.90),
+  ('PA-9003', 'Água Mineral 1,5L',                         '0', 'PA', 'un', '',         '2201.10.00', 1500, 'ml', 0.18),
+  ('PA-9004', 'Weiss Ed. Especial 500ml',                  '0', 'PA', 'un', '',         '2203.00.00',  500, 'ml', 0.50);
 
 -- ---------------------------------------------------------------------------
 -- SG1 — estrutura / lista técnica (G1_COD pai, G1_COMP componente, G1_QUANT)
@@ -125,7 +128,7 @@ INSERT INTO erp_demo.sd1 (d1_cod, d1_clasfis) VALUES
   ('MP-1004', '1'), ('MP-1009', '1'),
   ('MP-2001', '0'),
   ('MP-3001', '3'), ('MP-3002', '3'), ('MP-3006', '5'), ('MP-3007', '3'),
-  ('MP-3003', '5'), ('MP-3008', '0'),
+  ('MP-3003', '3'), ('MP-3008', '0'),
   ('MP-4001', '0'), ('MP-4002', '1'),
   ('MP-5001', '0'), ('MP-3004', '1'), ('MP-3005', '1'), ('MP-6001', '0');
 

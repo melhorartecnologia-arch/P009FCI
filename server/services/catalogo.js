@@ -17,6 +17,10 @@ const VARIAVEIS = [
   { variavel: 'produto.grupo',      entidade: 'produto',   rotulo: 'Grupo de insumo',                    chave: false, padrao: { tabela: 'SB1', campo: 'B1_GRUPO' } },
   { variavel: 'produto.ncm',        entidade: 'produto',   rotulo: 'Classificação fiscal (NCM)',         chave: false, padrao: { tabela: 'SB1', campo: 'B1_POSIPI' } },
   { variavel: 'produto.fci_vigente', entidade: 'produto',  rotulo: 'CI% da FCI vigente (pré-apuração)',  chave: false, padrao: { tabela: 'CFD', campo: 'CFD_CONIMP' }, opcional: true },
+  // Especificação técnica do SKU e custo industrial (RF-012 · RF-014)
+  { variavel: 'produto.volume',         entidade: 'produto', rotulo: 'Volume envasado (especificação do SKU)', chave: false, padrao: { tabela: 'SB1', campo: 'B1_CONV' }, opcional: true },
+  { variavel: 'produto.unidade_volume', entidade: 'produto', rotulo: 'Unidade do volume (ml · L)',             chave: false, padrao: { tabela: 'SB1', campo: 'B1_SEGUM' }, opcional: true },
+  { variavel: 'produto.overhead',       entidade: 'produto', rotulo: 'Mão de obra e custos industriais',       chave: false, padrao: { tabela: 'SB1', campo: 'B1_CUSTD' }, opcional: true },
 
   // entidade estrutura — lista técnica em cascata MP → PI → PA (ERP · SG1)
   { variavel: 'estrutura.pai',        entidade: 'estrutura', rotulo: 'Código do produto (pai)',          chave: true,  padrao: { tabela: 'SG1', campo: 'G1_COD' } },
