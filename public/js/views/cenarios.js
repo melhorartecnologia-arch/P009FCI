@@ -76,9 +76,17 @@ export async function telaCenarios(el, ctx) {
   const recente = cenarios[0] ? (cenarios[0].indicadores || INDIC_VAZIO) : INDIC_VAZIO;
   const nomeRecente = cenarios[0] ? cenarios[0].codigo : '—';
   const podeCriar = ctx.pode('criarCenario');
+  const podeSalvar = ctx.pode('salvar');
+  const perfilAtivo = esc(ctx.usuario && ctx.usuario.perfil ? ctx.usuario.perfil : 'perfil atual');
   const motivoCriar = 'Ação «criar e duplicar cenário» não habilitada para o seu perfil '
-    + `(${esc(ctx.usuario && ctx.usuario.perfil ? ctx.usuario.perfil : 'perfil atual')}) — RF-035. `
+    + `(${perfilAtivo}) — RF-035. `
     + 'A consulta de cenários, cálculos e relatórios permanece liberada. Consulte a matriz de permissões.';
+  // RF-035 — a recarga grava no cenário e exige a capacidade «salvar»: sem ela o
+  // botão permanece visível, desabilitado e com o impedimento explicado.
+  const motivoSalvar = 'Ação «salvar alterações no cenário» não habilitada para o seu perfil '
+    + `(${perfilAtivo}) — RF-035. `
+    + 'A recarga da estrutura altera o cenário e depende dessa capacidade. A consulta, os cálculos '
+    + 'e os relatórios permanecem liberados. Consulte a matriz de permissões.';
 
   el.innerHTML = `
   <div class="pagina" style="max-width:1500px;">
@@ -188,7 +196,7 @@ export async function telaCenarios(el, ctx) {
 
     lista.innerHTML = `
       <div class="grid-cenarios">
-        ${visiveis.map((c) => cartao(c, codigoPorId, podeCriar, motivoCriar)).join('')}
+        ${visiveis.map((c) => cartao(c, codigoPorId, { podeCriar, motivoCriar, podeSalvar, motivoSalvar })).join('')}
       </div>
       <div class="texto-mini" style="margin-top:10px;">
         Exibindo ${visiveis.length} de ${cenarios.length} cenário(s).
@@ -226,7 +234,8 @@ function corDoCi(ci) {
 }
 
 /* RF-004 — cartão com os indicadores de apoio à decisão do cenário */
-function cartao(c, codigoPorId, podeCriar, motivoCriar) {
+function cartao(c, codigoPorId, perm) {
+  const { podeCriar, motivoCriar, podeSalvar, motivoSalvar } = perm;
   const st = ST[c.status] || ST.rascunho;
   const i = Object.assign({}, INDIC_VAZIO, c.indicadores || {});
   const dist = Object.assign({ baixo: 0, medio: 0, alto: 0 }, i.dist || {});
@@ -321,7 +330,9 @@ function cartao(c, codigoPorId, podeCriar, motivoCriar) {
       <button class="btn btn-borda" style="width:34px;padding:0;justify-content:center;" data-acao="recarregar"
         ${congelado
           ? `disabled title="Cenário ${esc(st.label.toLowerCase())}: estrutura e premissas travadas para rastreabilidade (RN-10). Duplique-o para simular novamente."`
-          : 'title="Recarregar a estrutura da origem preservando as premissas do cenário (RF-005)"'}>⟳</button>
+          : !podeSalvar
+            ? `disabled title="${motivoSalvar}"`
+            : 'title="Recarregar a estrutura da origem preservando as premissas do cenário (RF-005)"'}>⟳</button>
       <button class="btn btn-borda" style="width:34px;padding:0;justify-content:center;" data-acao="historico"
         title="Histórico de alterações e linhagem de versões (RF-006 · RF-008 · RNF-04)">🕘</button>
     </div>

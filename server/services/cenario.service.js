@@ -75,7 +75,7 @@ async function recarregarEstrutura(id, usuario) {
 async function listarCenarios() {
   const { rows } = await query(
     `SELECT id, codigo, nome, tipo, ciclo, status, versao, origem_id, autor_nome, modo,
-            origem_dados, dados, criado_em, atualizado_em
+            base_calculo, origem_dados, dados, criado_em, atualizado_em
        FROM cenarios ORDER BY id DESC`
   );
   return rows;
