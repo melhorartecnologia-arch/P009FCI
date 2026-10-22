@@ -774,10 +774,57 @@ async function criarAlternativaInsumo(id, corpo, usuario) {
     novo.criadaEm = new Date().toISOString();
     novo.criadaPor = usuario ? usuario.nome : '';
 
-    // Premissas informadas na criação passam pela mesma validação do RF-049
+    // RF-055 — inclusão de FORNECEDOR: quando a alternativa traz um fornecedor
+    // próprio, ele nasce dentro do cenário e não no cadastro oficial (RNF-06).
+    const fornNome = String(corpo.fornecedorNome == null ? '' : corpo.fornecedorNome).trim();
+    const fornPais = String(corpo.fornecedorPais == null ? '' : corpo.fornecedorPais).trim();
+    if (fornNome) {
+      const existente = (dados.fornecedores || []).find(
+        (f) => String(f.nome || '').trim().toLowerCase() === fornNome.toLowerCase()
+      );
+      if (existente) {
+        novo.fornecedorId = existente.id;
+      } else {
+        const idsForn = new Set((dados.fornecedores || []).map((f) => f.id));
+        let s = 1;
+        let fid = `ALT-F${s}`;
+        while (idsForn.has(fid)) { s += 1; fid = `ALT-F${s}`; }
+        dados.fornecedores = [...(dados.fornecedores || []), {
+          id: fid, nome: fornNome, pais: fornPais || '—',
+          alt: true, origemCad: 'alternativa_cenario',
+          criadoEm: novo.criadaEm, criadoPor: novo.criadaPor,
+        }];
+        novo.fornecedorId = fid;
+      }
+    }
+
+    // RF-052 · RF-055 — cotação informada junto da alternativa segue a mesma
+    // regra de PUT /sim/cambio: moeda parametrizada, nunca BRL, valor positivo.
+    if (corpo.cotacao !== undefined && corpo.cotacao !== null && corpo.cotacao !== '') {
+      const cod = String(corpo.moeda == null ? (novo.moeda || '') : corpo.moeda).toUpperCase();
+      const taxa = E.n(corpo.cotacao, NaN);
+      if (cod && cod !== 'BRL') {
+        if (!E.MOEDAS[cod]) {
+          throw erro(422, `Moeda não parametrizada: «${cod}». Moedas disponíveis (RF-052): ${Object.keys(E.MOEDAS).join(', ')}.`);
+        }
+        if (!Number.isFinite(taxa) || taxa <= 0) {
+          throw erro(422, 'Informe a cotação da moeda como um número maior que zero (RF-052).');
+        }
+        dados.cambio = { ...(dados.cambio || {}), [cod]: taxa };
+      }
+    }
+
+    // Premissas informadas na criação passam pela mesma validação do RF-049.
+    // A tela agrupa os componentes do valor aduaneiro em «campos»; aceitar as
+    // duas formas evita que a alternativa nasça com os custos copiados do item
+    // base quando o usuário digitou os dela (RF-059).
     const pedidos = {};
-    for (const [campo, valor] of Object.entries(corpo)) {
-      if (CAMPOS_INSUMO[campo] && valor !== undefined) pedidos[campo] = valor;
+    const fontes = [corpo, (corpo.campos && typeof corpo.campos === 'object') ? corpo.campos : null];
+    for (const fonte of fontes) {
+      if (!fonte) continue;
+      for (const [campo, valor] of Object.entries(fonte)) {
+        if (CAMPOS_INSUMO[campo] && valor !== undefined && valor !== null && valor !== '') pedidos[campo] = valor;
+      }
     }
     const classEfetiva = pedidos.classSim != null
       ? normalizarCampoInsumo(E, dados, 'classSim', pedidos.classSim)

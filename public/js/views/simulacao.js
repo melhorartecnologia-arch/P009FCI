@@ -1514,7 +1514,7 @@ function modalAlternativa(S) {
     const nome = val('#al-nome').trim();
     if (!nome) { S.ctx.toast('Informe o nome da alternativa.', 'erro'); return; }
     const corpo = {
-      refBase: val('#al-base'), ref: val('#al-base'),
+      base: val('#al-base'), refBase: val('#al-base'), ref: val('#al-base'),
       nome, grupo: val('#al-grupo').trim() || null,
       moeda: val('#al-moeda'), cotacao: numero('#al-cotacao'),
       classSim: val('#al-class'),

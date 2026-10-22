@@ -229,7 +229,9 @@ router.put('/insumo', exigirAlguma('editarFiscal', 'editarFornecedor'), async (r
 router.post('/insumo/alternativa', exigirAcao('editarFornecedor'), async (req, res, next) => {
   try {
     const corpo = req.body || {};
-    const base = texto(corpo.base);
+    // «refBase» e «ref» são apelidos aceitos para o item de referência: a rota
+    // não recusa um pedido legítimo por causa do nome do campo.
+    const base = texto(corpo.base) || texto(corpo.refBase) || texto(corpo.ref);
     const nome = texto(corpo.nome);
     if (!base) return recusar(res, 'Informe o insumo de referência (base) da alternativa cadastral.');
     if (!nome) return recusar(res, 'Informe o nome da alternativa cadastral (RF-055).');

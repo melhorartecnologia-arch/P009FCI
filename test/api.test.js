@@ -543,3 +543,76 @@ test('RF-006 · RNF-04 — histórico com autor, data, versão e origem dos dado
   assert.ok(r.json.cenario.origemDados, 'origem dos dados identificada');
   assert.ok(r.json.versoes.length >= 1);
 });
+
+/* ================================================= Alternativa cadastral RF-055 */
+
+test('RF-055 — o payload exato do modal cria a alternativa com fornecedor, custos e cotação', async () => {
+  const id = await novoCenario('RF-055 alternativa');
+  const antes = await req('GET', `/cenarios/${id}`, undefined, tokens.custos);
+  const insumoBase = antes.json.cenario.dados.insumos.find((i) => i.classSim === 'importado_direto')
+    || antes.json.cenario.dados.insumos[0];
+  const nForn = antes.json.cenario.dados.fornecedores.length;
+
+  // Corpo montado exatamente como «Câmbio ▸ Incluir alternativa cadastral» envia:
+  // componentes aduaneiros aninhados em «campos» e o item de referência em
+  // «base»/«refBase»/«ref». O contrato tela↔servidor é o que este teste trava.
+  const corpo = {
+    base: insumoBase.id, refBase: insumoBase.id, ref: insumoBase.id,
+    nome: 'Alternativa de contrato', grupo: null,
+    moeda: 'GBP', cotacao: 7.4,
+    classSim: 'importado_direto',
+    fornecedorNome: 'Fornecedor Alternativo Ltda', fornecedorPais: 'Reino Unido',
+    campos: {
+      fob: 31, freteInt: 4, seguroInt: 0,
+      ii: 6, ipiImp: 0, pisCofinsImp: 0,
+      moeda: 'GBP', classSim: 'importado_direto',
+    },
+  };
+  const r = await req('POST', `/cenarios/${id}/sim/insumo/alternativa`, corpo, tokens.custos);
+  assert.strictEqual(r.status, 200, JSON.stringify(r.json));
+
+  const dep = await req('GET', `/cenarios/${id}`, undefined, tokens.custos);
+  const dados = dep.json.cenario.dados;
+  const alt = dados.insumos.find((i) => i.nome === 'Alternativa de contrato');
+  assert.ok(alt, 'a alternativa foi criada');
+  assert.strictEqual(alt.alt, true, 'identificada como alternativa do cenário');
+  assert.strictEqual(alt.origemCad, 'alternativa_cenario');
+  assert.strictEqual(alt.baseRef, insumoBase.id);
+
+  // os valores digitados não podem ser silenciosamente substituídos pelos do item base
+  assert.strictEqual(Number(alt.fob), 31, 'FOB informado é aplicado');
+  assert.strictEqual(Number(alt.freteInt), 4, 'frete informado é aplicado');
+  assert.strictEqual(Number(alt.ii), 6, 'II informado é aplicado');
+  assert.strictEqual(alt.moeda, 'GBP');
+
+  // RF-055 — a inclusão de FORNECEDOR acontece dentro do cenário
+  const forn = dados.fornecedores.find((f) => f.nome === 'Fornecedor Alternativo Ltda');
+  assert.ok(forn, 'o fornecedor informado é criado no cenário');
+  assert.strictEqual(dados.fornecedores.length, nForn + 1);
+  assert.strictEqual(alt.fornecedorId, forn.id, 'a alternativa aponta para o fornecedor criado');
+  assert.strictEqual(forn.alt, true);
+
+  // RF-052 — a cotação informada entra no câmbio do cenário
+  assert.strictEqual(Number(dados.cambio.GBP), 7.4);
+
+  // RF-007 — nada disso aparece em outro cenário
+  const outro = await novoCenario('RF-055 controle');
+  const ctrl = await req('GET', `/cenarios/${outro}`, undefined, tokens.custos);
+  assert.ok(!ctrl.json.cenario.dados.insumos.some((i) => i.nome === 'Alternativa de contrato'));
+  assert.ok(!ctrl.json.cenario.dados.fornecedores.some((f) => f.nome === 'Fornecedor Alternativo Ltda'));
+});
+
+test('RF-055 — cotação inválida na alternativa é recusada com a mesma regra do câmbio', async () => {
+  const id = await novoCenario('RF-055 cotação');
+  const pac = await req('GET', `/cenarios/${id}`, undefined, tokens.custos);
+  const ref = pac.json.cenario.dados.insumos[0].id;
+
+  const zero = await req('POST', `/cenarios/${id}/sim/insumo/alternativa`,
+    { base: ref, nome: 'Cotação zero', moeda: 'USD', cotacao: 0 }, tokens.custos);
+  assert.strictEqual(zero.status, 422, JSON.stringify(zero.json));
+  assert.match(zero.json.erro, /maior que zero/i);
+
+  const moeda = await req('POST', `/cenarios/${id}/sim/insumo/alternativa`,
+    { base: ref, nome: 'Moeda inexistente', moeda: 'XYZ', cotacao: 3 }, tokens.custos);
+  assert.strictEqual(moeda.status, 422, JSON.stringify(moeda.json));
+});
